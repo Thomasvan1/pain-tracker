@@ -2092,7 +2092,7 @@ $s('pass-show').addEventListener('change',()=>{const t=$s('pass-show').checked?'
 async function shareOrDownload(file){
   const touch=matchMedia('(pointer:coarse)').matches;
   if(touch&&navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],title:'Pain Tracker sync file'});toast('Saved — keep it in your drive');return true}
+    try{await navigator.share({files:[file]});toast('Saved — keep it in your drive');return true}
     catch(e){
       if(e.name==='AbortError')return false;
       // Deriving the key can outlast the browser's "recent tap" window — ask for one more tap.
