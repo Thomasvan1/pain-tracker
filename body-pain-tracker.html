@@ -1,0 +1,2374 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Body Pain Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap">
+<style>
+:root {
+  --bg:#EFF5F7;--surface:#E6EEF1;--card:#E8F0F3;--text:#163040;--text-sec:#3D6070;--text-muted:#7A9BAA;
+  --accent:#0891B2;--accent-h:#0E7490;--accent-lt:#D4F1F7;--accent-glow:rgba(8,145,178,0.15);
+  --green:#059669;--green-lt:#D1FAE5;--amber:#D97706;--amber-lt:#FEF3C7;--red:#DC2626;--red-lt:#FEE2E2;
+  --border:#C8D8E0;--border-lt:#D8E6EC;--scene-bg:#E8F0F3;
+  --neu-light:rgba(255,255,255,0.65);--neu-dark:rgba(0,40,60,0.12);
+  --neu-up:6px 6px 14px var(--neu-dark),-6px -6px 14px var(--neu-light);
+  --neu-in:inset 3px 3px 8px var(--neu-dark),inset -3px -3px 8px var(--neu-light);
+  --neu-soft:3px 3px 8px var(--neu-dark),-3px -3px 8px var(--neu-light);
+  --radius:12px;--radius-lg:20px;--ease:cubic-bezier(0.32,0.72,0,1);
+  --on-accent:#FFFFFF;
+  color-scheme:light;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1820;--surface:#132028;--card:#162430;--text:#E0ECF0;--text-sec:#9CB8C8;--text-muted:#5D7E8E;
+  --accent:#22D3EE;--accent-h:#67E8F9;--accent-lt:#0E3540;--accent-glow:rgba(34,211,238,0.12);
+  --green:#34D399;--green-lt:#064E3B;--amber:#FBBF24;--amber-lt:#78350F;--red:#F87171;--red-lt:#7F1D1D;
+  --border:#2A3D48;--border-lt:#1E3040;--scene-bg:#162430;
+  --neu-light:rgba(255,255,255,0.04);--neu-dark:rgba(0,0,0,0.35);
+  --neu-up:6px 6px 16px var(--neu-dark),-6px -6px 16px var(--neu-light);
+  --neu-in:inset 3px 3px 8px var(--neu-dark),inset -3px -3px 8px var(--neu-light);
+  --neu-soft:3px 3px 10px var(--neu-dark),-3px -3px 10px var(--neu-light);
+  --on-accent:#04202A;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0C1820;--surface:#132028;--card:#162430;--text:#E0ECF0;--text-sec:#9CB8C8;--text-muted:#5D7E8E;
+  --accent:#22D3EE;--accent-h:#67E8F9;--accent-lt:#0E3540;--accent-glow:rgba(34,211,238,0.12);
+  --green:#34D399;--green-lt:#064E3B;--amber:#FBBF24;--amber-lt:#78350F;--red:#F87171;--red-lt:#7F1D1D;
+  --border:#2A3D48;--border-lt:#1E3040;--scene-bg:#162430;
+  --neu-light:rgba(255,255,255,0.04);--neu-dark:rgba(0,0,0,0.35);
+  --neu-up:6px 6px 16px var(--neu-dark),-6px -6px 16px var(--neu-light);
+  --neu-in:inset 3px 3px 8px var(--neu-dark),inset -3px -3px 8px var(--neu-light);
+  --neu-soft:3px 3px 10px var(--neu-dark),-3px -3px 10px var(--neu-light);
+  --on-accent:#04202A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);padding-inline:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:24px 0 20px;margin-bottom:24px}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-icon{width:40px;height:40px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:var(--neu-soft);flex-shrink:0}
+.hdr-icon svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdr h1{font-size:1.5rem;font-weight:700;letter-spacing:-.03em}
+.neu{background:var(--surface);box-shadow:var(--neu-up);border-radius:var(--radius-lg);border:1px solid var(--border-lt)}
+.neu-pill{padding:8px 16px;border:none;border-radius:40px;background:var(--surface);box-shadow:var(--neu-soft);color:var(--text-sec);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .4s var(--ease);min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.neu-pill:hover{box-shadow:var(--neu-up);color:var(--accent)}
+.neu-pill:active{box-shadow:var(--neu-in);transform:scale(.97)}
+.neu-pill.on{background:var(--accent);color:#fff;box-shadow:var(--neu-soft),0 0 20px var(--accent-glow)}
+.main{display:grid;grid-template-columns:1fr 380px;gap:24px;margin-bottom:28px;align-items:start}
+.profile{padding:20px;margin-bottom:20px}
+.profile h3{font-size:.85rem;font-weight:600;color:var(--text-sec);margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
+.params-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.param{display:flex;flex-direction:column;gap:3px}
+.param label{font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:baseline}
+.param label span{font-size:.72rem;font-weight:600;color:var(--text-sec);font-variant-numeric:tabular-nums}
+.param input[type=range]{width:100%;height:6px;-webkit-appearance:none;appearance:none;background:var(--card);box-shadow:var(--neu-in);border-radius:3px;outline:none;cursor:pointer}
+.param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:var(--neu-soft);cursor:pointer;border:2px solid var(--surface)}
+.param-row{display:flex;gap:10px}
+.pf{flex:1;min-width:0}
+.pf label{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.pf input{width:100%;padding:8px 10px;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;min-height:38px;transition:box-shadow .3s var(--ease)}
+.pf input:focus{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
+.prof-hint{font-size:.68rem;color:var(--text-muted);margin-top:8px;font-style:italic;grid-column:1/-1}
+.params-toggle{font-size:.72rem;color:var(--accent);cursor:pointer;border:none;background:none;font-family:inherit;font-weight:600;padding:4px 0;margin-top:6px;grid-column:1/-1;text-align:left}
+.params-toggle:hover{text-decoration:underline}
+.shape-toggle{display:inline-flex;align-items:center;gap:6px;margin-top:12px;min-height:36px}
+.shape-toggle[aria-expanded="true"] .summ-chev{transform:rotate(90deg);color:var(--accent)}
+.shape-count{font-size:.66rem;font-weight:600;background:var(--accent-lt);color:var(--accent);border-radius:20px;padding:1px 8px}
+.shape-panel{margin-top:10px;padding-top:14px;border-top:1px solid var(--border-lt)}
+.shape-hint{font-size:.72rem;color:var(--text-muted);margin-bottom:12px;max-width:62ch}
+.param-scale{display:flex;justify-content:space-between;font-size:.62rem;color:var(--text-muted);margin-top:2px}
+.param input[type=range]{height:6px;background:var(--border);box-shadow:var(--neu-in)}
+.param input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.param input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:var(--neu-soft);cursor:pointer;border:2px solid var(--surface)}
+.diag{padding:20px}
+.vtabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.viewer{position:relative;width:100%;aspect-ratio:3/4;min-height:400px;max-height:600px;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--neu-in);cursor:grab;touch-action:none}
+.viewer:active{cursor:grabbing}
+.viewer canvas{display:block}
+.viewer-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:.88rem;line-height:1.6;color:var(--text-sec);max-width:none}
+.zone-hint{text-align:center;font-size:.82rem;color:var(--text-muted);min-height:1.4em;margin-top:10px;transition:color .2s}
+.zone-hint.active{color:var(--accent);font-weight:500}
+.eform{padding:22px}
+.eform-title{font-size:.95rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.fc{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;padding:4px;line-height:1;border-radius:8px;transition:all .2s var(--ease);min-width:32px;min-height:32px;display:flex;align-items:center;justify-content:center}
+.fc:hover{background:var(--red-lt);color:var(--red)}
+.fg{margin-bottom:14px}
+.fg>label{display:block;font-size:.75rem;font-weight:600;color:var(--text-sec);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);font-family:inherit;font-size:.85rem;transition:box-shadow .3s var(--ease);min-height:44px}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
+.fg select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237A9BAA' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.fg textarea{resize:vertical;min-height:64px}
+.fg input[readonly]{opacity:.7;cursor:default}
+/* Date/time picker — same structure and behaviour as Life Line's timestamp picker */
+.dtp-root{position:relative}
+.dtp-trigger{display:flex;align-items:stretch;width:100%;padding:0;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);cursor:pointer;overflow:hidden;min-height:44px;font-family:inherit;transition:box-shadow .3s var(--ease)}
+.dtp-trigger:hover,.dtp-trigger[aria-expanded="true"]{box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
+.dtp-trigger:focus-visible{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent)}
+.dtp-t-date{flex:1;padding:10px 14px;text-align:left;font-size:.85rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dtp-t-sep{width:1px;background:var(--border);margin:8px 0;flex-shrink:0}
+.dtp-t-time{width:92px;flex-shrink:0;padding:10px 0;text-align:center;font-size:.85rem;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap;transition:color .15s}
+.dtp{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:272px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--neu-up),0 12px 32px rgba(0,0,0,.18);z-index:40;overflow:hidden;transform-origin:top;transition:opacity .15s var(--ease),transform .15s var(--ease)}
+.dtp.closed{opacity:0;transform:scaleY(.94);pointer-events:none;visibility:hidden;transition:opacity .15s var(--ease),transform .15s var(--ease),visibility 0s .15s}
+.dtp-ch{display:flex;align-items:center;gap:6px;padding:10px 10px 6px}
+.dtp-nav{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-sec);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;font-family:inherit;flex-shrink:0;transition:all .15s}
+.dtp-nav:hover{color:var(--accent);border-color:var(--accent)}
+.dtp-lbl{flex:1;padding:5px;border:none;border-radius:8px;background:none;color:var(--text);font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:color .15s}
+.dtp-lbl:hover{color:var(--accent)}
+.dtp-cal{padding:0 8px 6px}
+.dtp-wds,.dtp-days{display:grid;grid-template-columns:repeat(7,1fr)}
+.dtp-days{gap:2px}
+.dtp-wd{text-align:center;font-size:.6rem;font-weight:600;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;padding:2px 0 4px}
+.dtp-day{aspect-ratio:1;border-radius:50%;border:none;background:transparent;color:var(--text);font-family:inherit;font-size:.74rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;transition:background .12s,color .12s}
+.dtp-day:hover:not(.sel):not(.oth){background:var(--card)}
+.dtp-day.oth{color:var(--text-muted);opacity:.35;pointer-events:none}
+.dtp-day.tod:not(.sel){box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent)}
+.dtp-day.sel{background:var(--accent);color:var(--on-accent);font-weight:700}
+.dtp-yrs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px}
+.dtp-yr{padding:8px 0;border-radius:8px;border:none;background:transparent;color:var(--text-sec);font-family:inherit;font-size:.74rem;font-weight:500;cursor:pointer;font-variant-numeric:tabular-nums;transition:all .12s}
+.dtp-yr:hover{background:var(--card);color:var(--text)}
+.dtp-yr.cyr{box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+.dtp-yr.syr{background:var(--accent);color:var(--on-accent);font-weight:700}
+.dtp-div{height:1px;background:var(--border);margin:0 8px}
+.dtp-ts{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px}
+.dtp-tc{display:flex;flex-direction:column;align-items:center;gap:2px}
+.dtp-cv{width:32px;height:22px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-radius:6px;font-size:10px;display:flex;align-items:center;justify-content:center;transition:color .12s,background .12s}
+.dtp-cv:hover{color:var(--accent);background:var(--accent-lt)}
+.dtp-tn{width:48px;height:36px;border-radius:9px;background:var(--card);box-shadow:var(--neu-in);display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums}
+.dtp-col{font-size:.95rem;font-weight:600;color:var(--text-muted)}
+.dtp-amp{display:flex;flex-direction:column;gap:4px;margin-left:4px}
+.dtp-ap{width:40px;padding:5px 0;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-family:inherit;font-size:.64rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .12s}
+.dtp-ap.on{background:var(--accent-lt);border-color:var(--accent);color:var(--accent)}
+.dtp-ap:not(.on):hover{background:var(--card);color:var(--text)}
+.dtp-foot{display:flex;gap:6px;padding:8px}
+.dtp-today{padding:8px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .12s}
+.dtp-today:hover{color:var(--text);border-color:var(--text-muted)}
+.dtp-ok{flex:1;padding:8px;border-radius:9px;border:1px solid var(--accent);background:var(--accent-lt);color:var(--accent);font-family:inherit;font-size:.72rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .12s}
+.dtp-ok:hover{background:var(--accent);color:var(--on-accent)}
+.dtp button:focus-visible,.dtp-lbl:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sev-row{display:flex;align-items:center;gap:12px}
+.sev-track{flex:1;position:relative;height:8px;border-radius:4px;background:var(--card);box-shadow:var(--neu-in);overflow:visible;cursor:pointer}
+.sev-fill{height:100%;border-radius:4px;transition:width .15s,background .15s}
+.sev-input{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;margin:0;min-height:44px;top:-18px}
+.sev-badge{min-width:36px;height:28px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;box-shadow:var(--neu-soft);font-variant-numeric:tabular-nums;transition:background .25s var(--ease)}
+.factions{display:flex;gap:10px;margin-top:18px}
+.btn-accent{padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:40px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:var(--neu-soft),0 0 20px var(--accent-glow);transition:all .35s var(--ease);min-height:44px}
+.btn-accent:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:var(--neu-up),0 0 30px var(--accent-glow)}
+.btn-accent:active{transform:scale(.97);box-shadow:var(--neu-in)}
+.btn-ghost{padding:10px 24px;background:var(--surface);color:var(--text-sec);border:none;border-radius:40px;font-family:inherit;font-size:.88rem;font-weight:500;cursor:pointer;box-shadow:var(--neu-soft);transition:all .35s var(--ease);min-height:44px}
+.btn-ghost:hover{box-shadow:var(--neu-up);color:var(--text)}
+.btn-ghost:active{box-shadow:var(--neu-in);transform:scale(.97)}
+.plog{padding:0;overflow:hidden}
+.plog-hdr{padding:16px 22px;font-weight:600;font-size:.92rem;display:flex;align-items:center;justify-content:space-between}
+.plog-ct{font-size:.75rem;color:var(--text-muted);font-weight:400}
+.pfilt{display:flex;gap:6px;padding:0 22px 12px}
+.pfilt button{font-size:.72rem;padding:5px 14px;border:none;border-radius:20px;background:var(--card);box-shadow:var(--neu-in);color:var(--text-muted);cursor:pointer;font-family:inherit;font-weight:500;transition:all .3s var(--ease);min-height:32px}
+.pfilt button.on{background:var(--accent);color:#fff;box-shadow:var(--neu-soft)}
+.log-list{max-height:400px;overflow-y:auto;padding:0 6px 6px}
+.log-item{padding:12px 16px;margin:6px 0;border-radius:var(--radius);display:flex;gap:12px;align-items:flex-start;cursor:pointer;background:var(--card);box-shadow:var(--neu-soft);transition:all .35s var(--ease)}
+.log-item:hover{box-shadow:var(--neu-up);transform:translateY(-1px)}
+.log-item.resolved{opacity:.4}
+.log-dot{width:10px;min-width:10px;height:10px;border-radius:50%;margin-top:4px;box-shadow:0 0 6px currentColor}
+.log-body{flex:1;min-width:0}
+.log-loc{font-weight:600;font-size:.84rem}
+.log-meta{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+.log-note{font-size:.78rem;color:var(--text-sec);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log-acts{display:flex;gap:4px;flex-shrink:0}
+.log-btn{background:var(--card);border:none;color:var(--text-muted);cursor:pointer;padding:0;width:28px;height:28px;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;box-shadow:var(--neu-soft);transition:all .3s var(--ease)}
+.log-btn:hover{color:var(--red);box-shadow:var(--neu-up)}
+.log-btn.rv:hover{color:var(--green)}
+.empty{text-align:center;padding:32px 20px;color:var(--text-muted);font-size:.85rem;line-height:1.6}
+.summ{padding:24px;margin-bottom:24px}
+.sync-status{font-size:.74rem;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.sync-body:not([hidden]){margin-top:14px;display:flex;flex-direction:column;gap:14px}
+.sync-hint{font-size:.8rem;line-height:1.6;color:var(--text-sec);max-width:68ch}
+.sync-actions{display:flex;gap:10px;flex-wrap:wrap}
+.sync-actions .btn-accent.attention{animation:syncPulse 1.6s var(--ease) 3}
+@keyframes syncPulse{50%{box-shadow:var(--neu-soft),0 0 0 6px var(--accent-glow)}}
+@media(prefers-reduced-motion:reduce){.sync-actions .btn-accent.attention{animation:none}}
+.sync-meta{font-size:.74rem;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.sync-busy{opacity:.6;pointer-events:none}
+.sync-auto:not([hidden]){display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in)}
+.sync-auto-row{display:flex;align-items:flex-start;gap:10px;font-size:.84rem;line-height:1.55;color:var(--text)}
+.sync-auto-row span:last-child{overflow-wrap:anywhere}
+.sync-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:.4em;background:var(--text-muted)}
+.sync-dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.sync-dot.busy{background:var(--accent);animation:syncBlink 1s ease-in-out infinite}
+.sync-dot.err{background:var(--red)}
+@keyframes syncBlink{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.sync-dot.busy{animation:none}}
+.sync-msg{font-size:.8rem;line-height:1.55;max-width:68ch}
+.sync-msg:empty{display:none}
+.sync-msg.err{color:var(--red)}
+.sync-msg.ok{color:var(--accent)}
+.pass-msg{font-size:.84rem;color:var(--text-sec);line-height:1.6;margin-bottom:14px}
+.pass-check{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-sec);margin-bottom:8px;cursor:pointer;min-height:32px}
+.pass-check input{width:18px;height:18px;accent-color:var(--accent)}
+.pass-err{font-size:.8rem;color:var(--red);min-height:1.2em;margin-top:4px}
+.credits{font-size:.7rem;line-height:1.6;color:var(--text-muted);text-align:center;max-width:72ch;margin:0 auto;padding-block:4px 32px;text-wrap:balance}
+.credits a{color:var(--text-sec);text-underline-offset:2px}
+.credits a:hover{color:var(--accent)}
+.summ-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.summ-hdr h2{font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+.summ-toggle{display:inline-flex;align-items:center;gap:8px;background:none;border:none;padding:6px 4px;color:var(--text);font:inherit;cursor:pointer;min-height:44px;border-radius:var(--radius)}
+.summ-toggle:hover{color:var(--accent)}
+.summ-chev{transition:transform .35s var(--ease);color:var(--text-muted)}
+.summ-toggle[aria-expanded="true"] .summ-chev{transform:rotate(90deg);color:var(--accent)}
+.summ-body:not([hidden]){margin-top:16px}
+.summ-body{font-size:.82rem;white-space:pre-wrap;color:var(--text-sec);line-height:1.7;padding:18px;background:var(--card);box-shadow:var(--neu-in);border-radius:var(--radius);max-height:440px;overflow-y:auto;font-variant-numeric:tabular-nums;font-family:'Noto Sans','Figtree',monospace}
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:40px;font-size:.84rem;font-weight:600;opacity:0;transition:all .4s var(--ease);pointer-events:none;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hist-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s var(--ease)}
+.hist-overlay[hidden]{display:none}
+.hist-panel{width:100%;max-width:560px;max-height:85vh;overflow-y:auto;padding:24px}
+.hist-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.confirm-panel{max-width:420px}
+.confirm-danger{background:var(--red);box-shadow:var(--neu-soft)}
+.confirm-danger:hover{background:var(--red);filter:brightness(1.08);box-shadow:var(--neu-up)}
+#body-toggle.locked{color:var(--text-muted)}
+#body-toggle.locked:hover{color:var(--text-sec)}
+@media(max-width:860px){.main{grid-template-columns:1fr}.log-list{max-height:280px}}
+@media(max-width:520px){.params-grid{grid-template-columns:1fr}.param-row{flex-direction:column}.factions{flex-direction:column}.factions button{width:100%}.hdr h1{font-size:1.25rem}}
+</style>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+    <h1>Body Pain Tracker</h1>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="neu-pill" id="body-toggle" title="Switch body model">Male</button>
+    <button class="neu-pill" id="clear-btn">Clear All</button>
+  </div>
+</header>
+
+<section class="profile neu">
+  <h3>Body Parameters</h3>
+  <div class="param-row">
+    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" id="ht-ft" placeholder="5" min="3" max="8"></div>
+    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" id="ht-in" placeholder="10" min="0" max="11"></div>
+    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" id="wt" placeholder="170" min="60" max="1000"></div>
+    <div class="pf"><label for="age">Age</label><input type="number" id="age" placeholder="30" min="1" max="120"></div>
+  </div>
+  <div class="prof-hint" id="bmi-hint">Enter your measurements for the doctor summary. Use the toggle above to switch body model.</div>
+  <button class="params-toggle shape-toggle" id="shape-toggle" aria-expanded="false" aria-controls="shape-panel">
+    <svg class="summ-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+    Adjust body shape <span class="shape-count" id="shape-count" hidden></span>
+  </button>
+  <div class="shape-panel" id="shape-panel" hidden>
+    <p class="shape-hint">Weight sets your overall build. Fine-tune individual areas so the model looks more like you — double-click a slider to reset it.</p>
+    <div class="params-grid" id="shape-grid"></div>
+    <button class="params-toggle" id="shape-reset">Reset all</button>
+  </div>
+</section>
+
+<div class="main">
+  <section class="diag neu">
+    <div class="vtabs" id="vtabs">
+      <button class="neu-pill on" data-v="front">Front</button>
+      <button class="neu-pill" data-v="back">Back</button>
+      <button class="neu-pill" data-v="left">Left</button>
+      <button class="neu-pill" data-v="right">Right</button>
+      <span style="flex:1"></span>
+      <button class="neu-pill" id="markers-toggle" aria-pressed="false" title="Show/hide saved pain markers on model">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 3"/></svg>
+        Markers
+      </button>
+    </div>
+    <div class="viewer" id="viewer"></div>
+    <div class="zone-hint" id="zhint">Click on body to mark pain · Drag to rotate · Ctrl + scroll to zoom</div>
+  </section>
+  <section class="detail">
+    <div class="eform neu" id="eform" hidden>
+      <div class="eform-title"><span id="ftitle">Log Pain</span><button class="fc" id="fclose" aria-label="Close form">&times;</button></div>
+      <div class="fg"><label for="floc">Detected Region</label><input type="text" id="floc" readonly></div>
+      <div class="fg"><label for="fsev">Severity (1-10)</label>
+        <div class="sev-row">
+          <div class="sev-track"><div class="sev-fill" id="sev-fill" style="width:50%;background:var(--amber)"></div><input type="range" class="sev-input" id="fsev" min="1" max="10" value="5"></div>
+          <span class="sev-badge" id="sbadge" style="background:var(--amber)">5</span>
+        </div>
+      </div>
+      <div class="fg"><label for="ftype">Pain Type</label><select id="ftype">
+        <option value="aching">Aching</option><option value="burning">Burning</option><option value="cramping">Cramping</option>
+        <option value="dull">Dull</option><option value="numbness">Numbness</option><option value="pressure">Pressure</option>
+        <option value="sharp" selected>Sharp</option><option value="shooting">Shooting</option><option value="stabbing">Stabbing</option>
+        <option value="stinging">Stinging</option><option value="throbbing">Throbbing</option><option value="tingling">Tingling</option>
+        <option value="tightness">Tightness</option><option value="weakness">Weakness</option><option value="swelling">Swelling</option>
+      </select></div>
+      <div class="fg"><label for="fdur">Duration</label><input type="text" id="fdur" placeholder="e.g. 2 days, since Monday"></div>
+      <div class="fg"><label for="fnotes">Notes</label><textarea id="fnotes" placeholder="Triggers, what makes it worse or better..."></textarea></div>
+      <div class="fg"><label id="fdate-lbl">Date &amp; Time</label>
+        <div class="dtp-root" id="dtp-root">
+          <button type="button" class="dtp-trigger" id="dtp-trig" aria-haspopup="dialog" aria-expanded="false" aria-controls="dtp" aria-labelledby="fdate-lbl dtp-tdate dtp-ttime">
+            <span class="dtp-t-date" id="dtp-tdate">—</span><span class="dtp-t-sep" aria-hidden="true"></span><span class="dtp-t-time" id="dtp-ttime">—</span>
+          </button>
+          <div class="dtp closed" id="dtp" role="dialog" aria-label="Choose date and time">
+            <div class="dtp-ch">
+              <button type="button" class="dtp-nav" id="dtp-prev" aria-label="Previous">&#8249;</button>
+              <button type="button" class="dtp-lbl" id="dtp-lbl"></button>
+              <button type="button" class="dtp-nav" id="dtp-next" aria-label="Next">&#8250;</button>
+            </div>
+            <div id="dtp-calsec"><div class="dtp-cal"><div class="dtp-wds" id="dtp-wd" aria-hidden="true"></div><div class="dtp-days" id="dtp-dy"></div></div></div>
+            <div id="dtp-yrsec" hidden><div class="dtp-yrs" id="dtp-yr"></div></div>
+            <div class="dtp-div"></div>
+            <div class="dtp-ts" id="dtp-ts">
+              <div class="dtp-tc"><button type="button" class="dtp-cv" data-adj="h" data-d="1" aria-label="Hour up">&#9650;</button><div class="dtp-tn" id="dtp-hn"></div><button type="button" class="dtp-cv" data-adj="h" data-d="-1" aria-label="Hour down">&#9660;</button></div>
+              <div class="dtp-col" aria-hidden="true">:</div>
+              <div class="dtp-tc"><button type="button" class="dtp-cv" data-adj="m" data-d="1" aria-label="Minutes up">&#9650;</button><div class="dtp-tn" id="dtp-mn"></div><button type="button" class="dtp-cv" data-adj="m" data-d="-1" aria-label="Minutes down">&#9660;</button></div>
+              <div class="dtp-amp"><button type="button" class="dtp-ap" data-a="AM">AM</button><button type="button" class="dtp-ap" data-a="PM">PM</button></div>
+            </div>
+            <div class="dtp-div"></div>
+            <div class="dtp-foot"><button type="button" class="dtp-today" id="dtp-today">Today</button><button type="button" class="dtp-ok" id="dtp-ok">Confirm</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="factions"><button class="btn-accent" id="fsave">Save Entry</button><button class="btn-ghost" id="fcancel">Cancel</button></div>
+    </div>
+    <div style="padding-top:12px">
+      <button class="neu-pill" id="hist-btn" style="width:100%;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Pain History <span id="pct-badge" style="background:var(--accent);color:#fff;border-radius:20px;padding:1px 8px;font-size:.7rem;min-width:20px;text-align:center">0</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<section class="summ neu">
+  <div class="summ-hdr">
+    <h2><button class="summ-toggle" id="summ-toggle" aria-expanded="false" aria-controls="sbody">
+      <svg class="summ-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+      Summary for Doctor
+    </button></h2>
+    <button class="btn-accent" id="copybtn" style="font-size:.8rem;padding:8px 20px">Copy Summary</button>
+  </div>
+  <div class="summ-body" id="sbody" hidden>No pain entries recorded yet. Click anywhere on the 3D body above to log pain points for your next appointment.</div>
+</section>
+<section class="summ neu" id="sync-card">
+  <div class="summ-hdr">
+    <h2><button class="summ-toggle" id="sync-toggle" aria-expanded="false" aria-controls="sync-body">
+      <svg class="summ-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+      Sync between devices
+    </button></h2>
+    <span class="sync-status" id="sync-status">Not synced yet</span>
+  </div>
+  <div class="sync-body" id="sync-body" hidden>
+    <div class="sync-auto" id="sync-auto" hidden>
+      <div class="sync-auto-row"><span class="sync-dot" id="sync-dot" aria-hidden="true"></span><span id="sync-auto-text">Checking automatic sync…</span></div>
+      <div class="sync-actions">
+        <button class="btn-accent" id="auto-action" hidden></button>
+        <button class="btn-ghost" id="auto-now" hidden>Sync now</button>
+        <button class="params-toggle" id="auto-change" hidden>Change sync file</button>
+      </div>
+    </div>
+    <p class="sync-hint">Your entries are saved into one encrypted file, <strong>pain-tracker-sync.txt</strong>. Keep it in any drive you use (Proton Drive, Google Drive, iCloud…) — the drive only ever sees scrambled data. On another device, import that file, then export to save changes back.</p>
+    <div class="sync-actions">
+      <button class="btn-accent" id="sync-export">Export sync file</button>
+      <button class="btn-ghost" id="sync-import">Import sync file</button>
+      <input type="file" id="sync-file" accept=".txt,text/plain" hidden>
+    </div>
+    <p class="sync-msg" id="sync-msg" role="status"></p>
+    <p class="sync-meta" id="sync-meta"></p>
+    <button class="params-toggle" id="sync-forget" hidden>Forget passphrase on this device</button>
+  </div>
+</section>
+<footer class="credits">
+  3D models by <a href="https://sketchfab.com/ferrumiron6" target="_blank" rel="noopener">ferrumiron6</a>:
+  <a href="https://sketchfab.com/3d-models/human-body-base-mesh-male-3678451d8ccb435e833f8a10729c09f5" target="_blank" rel="noopener">Human Body Base Mesh Male</a> and
+  <a href="https://sketchfab.com/3d-models/free-human-body-base-mesh-female-35f25ce675594c0caf611f8c0617aaf1" target="_blank" rel="noopener">Free Human Body Base Mesh Female</a>,
+  licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Body shape is modified in this app.
+</footer>
+<!-- History overlay -->
+<div class="hist-overlay" id="hist-overlay" hidden>
+  <div class="hist-panel neu">
+    <div class="hist-hdr">
+      <h2 style="font-size:1.2rem;font-weight:700">Pain History</h2>
+      <button class="fc" id="hist-close" aria-label="Close pain history">&times;</button>
+    </div>
+    <div class="pfilt" id="pfilt">
+      <button class="on" data-f="all">All</button><button data-f="active">Active</button><button data-f="resolved">Resolved</button>
+    </div>
+    <div class="log-list" id="llist" style="max-height:60vh"><div class="empty">No entries yet.<br>Click anywhere on the 3D body to start tracking.</div></div>
+  </div>
+</div>
+<div class="hist-overlay" id="confirm-overlay" hidden>
+  <div class="hist-panel neu confirm-panel" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-msg">
+    <h2 id="confirm-title" style="font-size:1.1rem;font-weight:700;margin-bottom:10px">Switch body type?</h2>
+    <p id="confirm-msg" style="font-size:.88rem;color:var(--text-sec);line-height:1.6"></p>
+    <div class="factions"><button class="btn-accent confirm-danger" id="confirm-ok">Clear &amp; switch</button><button class="btn-ghost" id="confirm-cancel">Cancel</button></div>
+  </div>
+</div>
+<div class="hist-overlay" id="pass-overlay" hidden>
+  <form class="hist-panel neu confirm-panel" id="pass-form" role="dialog" aria-modal="true" aria-labelledby="pass-title" aria-describedby="pass-msg" novalidate>
+    <h2 id="pass-title" style="font-size:1.1rem;font-weight:700;margin-bottom:10px">Sync passphrase</h2>
+    <p id="pass-msg" class="pass-msg"></p>
+    <input type="text" name="username" autocomplete="username" value="Pain Tracker sync" hidden>
+    <div class="fg"><label for="pass-1">Passphrase</label><input type="password" id="pass-1" autocomplete="off" spellcheck="false"></div>
+    <div class="fg" id="pass-2-wrap"><label for="pass-2">Type it again</label><input type="password" id="pass-2" autocomplete="off" spellcheck="false"></div>
+    <label class="pass-check"><input type="checkbox" id="pass-show"> Show passphrase</label>
+    <label class="pass-check" id="pass-remember-wrap"><input type="checkbox" id="pass-remember" checked> Remember on this device</label>
+    <p class="pass-err" id="pass-err" role="alert"></p>
+    <div class="factions"><button type="submit" class="btn-accent" id="pass-ok">Continue</button><button type="button" class="btn-ghost" id="pass-cancel">Cancel</button></div>
+  </form>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DecalGeometry} from 'three/addons/geometries/DecalGeometry.js';
+window.THREE=THREE;
+/* ═══════════════════════════════════════════
+   PARAMS & UTILS
+   ═══════════════════════════════════════════ */
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function easeIO(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+
+/* ═══════════════════════════════════════════
+   GLB MODEL LOADING
+   ═══════════════════════════════════════════ */
+const MODELS={male:'models/human_body_base_mesh_male.glb',female:'models/free_human_body_base_mesh_female.glb'};
+let skinMat, bodyGroup, allMeshes=[], loadedModels={}, currentBodyType='male';
+let modelBBox=null, showMarkers=false, bodyMesh=null;
+
+function initMaterials(){
+  skinMat=new THREE.MeshStandardMaterial({
+    color:0xC49570,roughness:0.55,metalness:0.02,side:THREE.DoubleSide
+  });
+}
+
+function loadModel(type,cb){
+  if(loadedModels[type]){cb(loadedModels[type]);return}
+  const loader=new GLTFLoader();
+  loader.load(MODELS[type],gltf=>{
+    loadedModels[type]=gltf;
+    cb(gltf);
+  },undefined,err=>{
+    console.error('Failed to load model:',err);
+    const msg=document.createElement('div');
+    msg.className='viewer-msg';
+    msg.textContent=location.protocol==='file:'
+      ?'The 3D body can’t load when this page is opened as a file. Start the local server (see README.txt) and open http://localhost:8765/body-pain-tracker.html'
+      :'The 3D body model couldn’t be loaded. Check that the models folder is next to this page, then reload.';
+    document.getElementById('viewer').appendChild(msg);
+  });
+}
+
+function getBodyProportions(){
+  if(!ST.htFt||!ST.wt)return null;
+  // Shape uses the supported range; the summary still shows exactly what was entered.
+  const htIn=clamp(ST.htFt*12+(ST.htIn||0),36,107);
+  const wt=clamp(ST.wt,60,1000);
+
+  const refHt=currentBodyType==='male'?70:64;
+  const refWt=currentBodyType==='male'?170:145;
+  const htRatio=htIn/refHt;
+  const bmi=(wt/(htIn*htIn))*703;
+  const refBmi=(refWt/(refHt*refHt))*703;
+  const bmiRatio=bmi/refBmi;
+
+  return {htRatio, bmiRatio, scaleY:lerp(1,htRatio,0.6)};
+}
+
+// Fat distribution by height (0 = feet, 1 = top of head): [relY, weight, forward bias, backward bias]
+const TORSO_W=[[0,.04,0,0],[.06,.08,0,0],[.12,.2,0,0],[.22,.25,0,0],[.26,.3,0,0],[.32,.42,0,0],[.40,.5,0,.2],
+  [.46,.8,.2,.5],[.52,.95,.6,.4],[.58,1,.9,.1],[.64,.92,.65,0],[.70,.78,.4,0],[.76,.62,.12,0],[.80,.52,0,0],[.85,.35,0,0],[.88,.18,0,0],[.92,.08,0,0],[1,.05,0,0]];
+// Along the arm (0 = armpit, 1 = fingertips): [t, weight]
+const ARM_W=[[.12,.38],[.45,.3],[.7,.14],[.85,.04],[1,.03]];
+const SHAPE_AMOUNT=0.095,SHAPE_K=2.0;
+
+function sampleTable(tbl,x,col){
+  if(x<=tbl[0][0])return tbl[0][col];
+  for(let i=1;i<tbl.length;i++){
+    if(x<=tbl[i][0]){const a=tbl[i-1],b=tbl[i];return lerp(a[col],b[col],(x-a[0])/(b[0]-a[0]))}
+  }
+  return tbl[tbl.length-1][col];
+}
+
+// Keeps growing with weight but tapers, so extreme weights stay distinct without the mesh blowing apart.
+function fatAmount(ratio){
+  return ratio>=1?1-Math.exp(-(ratio-1)/SHAPE_K):-0.45*(1-Math.exp(-(1-ratio)/0.3));
+}
+
+// Seam vertices are duplicated in the mesh; rep[i] maps every copy to one canonical vertex.
+function buildWeld(geo,eps){
+  const pos=geo.attributes.position,n=pos.count,rep=new Int32Array(n),seen=new Map();
+  for(let i=0;i<n;i++){
+    const k=Math.round(pos.getX(i)/eps)+','+Math.round(pos.getY(i)/eps)+','+Math.round(pos.getZ(i)/eps);
+    const r=seen.get(k);
+    if(r===undefined){seen.set(k,i);rep[i]=i}else rep[i]=r;
+  }
+  return rep;
+}
+
+function buildNeighbors(geo,rep){
+  const n=rep.length,sets=new Array(n),idx=geo.index?geo.index.array:null,tris=idx?idx.length:n;
+  const link=(a,b)=>{if(a===b)return;(sets[a]||(sets[a]=new Set())).add(b);(sets[b]||(sets[b]=new Set())).add(a)};
+  for(let t=0;t<tris;t+=3){
+    const a=rep[idx?idx[t]:t],b=rep[idx?idx[t+1]:t+1],c=rep[idx?idx[t+2]:t+2];
+    link(a,b);link(b,c);link(c,a);
+  }
+  return sets.map(s=>s?Int32Array.from(s):null);
+}
+
+// Jacobi smoothing over canonical vertices; stride = values per vertex.
+function smoothField(vals,stride,nb,iters,lambda){
+  const tmp=new Float32Array(vals.length);
+  for(let it=0;it<iters;it++){
+    tmp.set(vals);
+    for(let i=0;i<nb.length;i++){
+      const list=nb[i];
+      if(!list||!list.length)continue;
+      for(let s=0;s<stride;s++){
+        let sum=0;
+        for(let j=0;j<list.length;j++)sum+=tmp[list[j]*stride+s];
+        vals[i*stride+s]=lerp(tmp[i*stride+s],sum/list.length,lambda);
+      }
+    }
+  }
+}
+
+// Small detailed features (toes, fingers, navel, armpits) fold inside-out under the same push as the
+// coarse belly. Relax the displacement locally wherever a triangle flips, until none do.
+function guardFlips(pos,D,rep,nb,idx,eligible){
+  const tc=idx?idx.length:rep.length,T=new Int32Array(tc);
+  for(let t=0;t<tc;t++)T[t]=rep[idx?idx[t]:t];
+  const p=new Float32Array(pos.count*3),N0=new Float32Array(tc);
+  for(let i=0;i<pos.count;i++){p[i*3]=pos.getX(i);p[i*3+1]=pos.getY(i);p[i*3+2]=pos.getZ(i)}
+  const faceN=(t,withD,out)=>{
+    const a=T[t]*3,b=T[t+1]*3,c=T[t+2]*3,s=withD?1:0;
+    const ax=p[a]+D[a]*s,ay=p[a+1]+D[a+1]*s,az=p[a+2]+D[a+2]*s;
+    const ux=p[b]+D[b]*s-ax,uy=p[b+1]+D[b+1]*s-ay,uz=p[b+2]+D[b+2]*s-az;
+    const vx=p[c]+D[c]*s-ax,vy=p[c+1]+D[c+1]*s-ay,vz=p[c+2]+D[c+2]*s-az;
+    out[0]=uy*vz-uz*vy;out[1]=uz*vx-ux*vz;out[2]=ux*vy-uy*vx;
+  };
+  const n0=[0,0,0],n1=[0,0,0];
+  for(let t=0;t<tc;t+=3){faceN(t,false,n0);N0[t]=n0[0];N0[t+1]=n0[1];N0[t+2]=n0[2]}
+  // Blend toward neighbours first so the spot keeps moving with its surroundings; shrink only if that isn't enough.
+  for(let it=0;it<16;it++){
+    let zone=new Set();
+    for(let t=0;t<tc;t+=3){
+      faceN(t,true,n1);
+      if(N0[t]*n1[0]+N0[t+1]*n1[1]+N0[t+2]*n1[2]<0)for(let k=0;k<3;k++)zone.add(T[t+k]);
+    }
+    if(!zone.size)return;
+    for(let r=0;r<2;r++){
+      const grown=new Set(zone);
+      zone.forEach(v=>{const l=nb[v];if(l)l.forEach(j=>grown.add(j))});
+      zone=grown;
+    }
+    zone.forEach(v=>{if(!eligible[v])zone.delete(v)});
+    if(!zone.size)return;
+    const shrink=it<8?1:0.75,next=new Map();
+    zone.forEach(v=>{
+      const l=nb[v]||[];let x=D[v*3],y=D[v*3+1],z=D[v*3+2];
+      for(let j=0;j<l.length;j++){x+=D[l[j]*3];y+=D[l[j]*3+1];z+=D[l[j]*3+2]}
+      const s=shrink/(l.length+1);
+      next.set(v,[x*s,y*s,z*s]);
+    });
+    next.forEach((d,v)=>{D[v*3]=d[0];D[v*3+1]=d[1];D[v*3+2]=d[2]});
+  }
+}
+
+function weldNormals(geo,rep){
+  const nor=geo.attributes.normal.array,n=rep.length,acc=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const r=rep[i]*3;acc[r]+=nor[i*3];acc[r+1]+=nor[i*3+1];acc[r+2]+=nor[i*3+2]}
+  for(let i=0;i<n;i++){
+    const r=rep[i]*3,l=Math.hypot(acc[r],acc[r+1],acc[r+2])||1;
+    nor[i*3]=acc[r]/l;nor[i*3+1]=acc[r+1]/l;nor[i*3+2]=acc[r+2]/l;
+  }
+  geo.attributes.normal.needsUpdate=true;
+}
+
+// Per-part fullness sliders (-1..1). amt = [fuller, slimmer] in body heights; slimmer is smaller so thin parts can't collapse.
+const SHAPE_PARTS=[
+  {id:'chest',label:'Chest',amt:[.04,.02]},
+  {id:'belly',label:'Belly',amt:[.05,.03]},
+  {id:'hips',label:'Hips & buttocks',amt:[.045,.025]},
+  {id:'thighs',label:'Thighs',amt:[.032,.02]},
+  {id:'calves',label:'Calves',amt:[.025,.012]},
+  {id:'arms',label:'Arms',amt:[.03,.012]}
+];
+function smoothstep(a,b,x){const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
+function trap(x,a,b,c,d){return smoothstep(a,b,x)*(1-smoothstep(c,d,x))}
+function partMasks(relY,torso,armT,isArm){
+  return {
+    chest:trap(relY,.66,.72,.80,.86)*torso,
+    belly:trap(relY,.50,.56,.66,.72)*torso,
+    hips:trap(relY,.40,.45,.52,.57)*torso,
+    thighs:trap(relY,.22,.30,.40,.47),
+    calves:trap(relY,.04,.09,.19,.25),
+    arms:isArm?smoothstep(0,.12,armT)*(1-smoothstep(.6,.9,armT)):0
+  };
+}
+
+function applyBodyShape(model){
+  const props=getBodyProportions();
+  const f=props?fatAmount(props.bmiRatio):0;
+  const sliders=SHAPE_PARTS.filter(p=>ST.shape[p.id]);
+  if(Math.abs(f)<0.005&&!sliders.length)return;
+
+  let body=null;
+  model.traverse(c=>{if(c.isMesh&&(!body||c.geometry.attributes.position.count>body.geometry.attributes.position.count))body=c});
+  if(!body)return;
+
+  const geo=body.geometry,pos=geo.attributes.position,n=pos.count;
+  if(!geo.attributes.normal)geo.computeVertexNormals();
+  geo.computeBoundingBox();
+  const bb=geo.boundingBox,H=bb.max.y-bb.min.y,cx=(bb.min.x+bb.max.x)/2;
+  const rep=buildWeld(geo,H*1e-5);
+  const authoredN=geo.attributes.normal.array.slice();
+  weldNormals(geo,rep);
+  const nb=buildNeighbors(geo,rep);
+
+  // Waist width decides where arms begin. The 0.22H cap keeps hanging hands (female A-pose) out of the measurement.
+  let waist=0;
+  for(let i=0;i<n;i++){
+    const r=(pos.getY(i)-bb.min.y)/H,ax=Math.abs(pos.getX(i)-cx);
+    if(r>0.55&&r<0.66&&ax<H*0.22)waist=Math.max(waist,ax);
+  }
+  const torsoHalf=waist*1.2,armLen=Math.max((bb.max.x-bb.min.x)/2-torsoHalf,H*1e-5);
+  const nor=geo.attributes.normal.array;
+
+  // Push directions: smoothed normals, with downward pushes damped so the belly can't sag through the groin.
+  const dir=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    if(rep[i]!==i)continue;
+    const ny=nor[i*3+1];
+    dir[i*3]=nor[i*3];dir[i*3+1]=ny<0?ny*0.35:ny;dir[i*3+2]=nor[i*3+2];
+  }
+  smoothField(dir,3,nb,3,0.5);
+
+  const mag=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    if(rep[i]!==i)continue;
+    const l=Math.hypot(dir[i*3],dir[i*3+1],dir[i*3+2])||1;
+    dir[i*3]/=l;dir[i*3+1]/=l;dir[i*3+2]/=l;
+    const relY=(pos.getY(i)-bb.min.y)/H,ax=Math.abs(pos.getX(i)-cx),nz=dir[i*3+2];
+    let w=sampleTable(TORSO_W,relY,1),k=0,t=0;
+    const fwd=sampleTable(TORSO_W,relY,2)*Math.max(0,nz),back=sampleTable(TORSO_W,relY,3)*Math.max(0,-nz);
+    let bias=1+fwd+back;
+    const isArm=relY>0.55&&relY<0.9&&ax>torsoHalf;
+    if(isArm){
+      // Fade torso behaviour into arm behaviour over the first stretch of the arm — a hard switch leaves a step.
+      t=(ax-torsoHalf)/armLen;k=clamp(t/0.12,0,1);
+      w=t<0.12?lerp(w,ARM_W[0][1],k):sampleTable(ARM_W,t,1);
+      bias=lerp(bias,1,k);
+    }
+    let m=f*SHAPE_AMOUNT*w*(f>0?bias:1);
+    if(sliders.length){
+      const masks=partMasks(relY,1-k,t,isArm);
+      // Belly grows front and sides (not the back); hips grow mostly into the buttocks.
+      masks.belly*=lerp(0.3,1,clamp(nz*0.5+0.5,0,1));
+      const grow={belly:1+fwd,hips:1+back};
+      for(const p of sliders){
+        const s=ST.shape[p.id],mk=masks[p.id];
+        if(mk)m+=s*(s>0?p.amt[0]*(grow[p.id]||1):p.amt[1])*mk;
+      }
+    }
+    mag[i]=m*H;
+  }
+  smoothField(mag,1,nb,10,0.5);
+
+  const D=new Float32Array(n*3),eligible=new Uint8Array(n);
+  for(let i=0;i<n;i++){
+    if(rep[i]!==i)continue;
+    D[i*3]=dir[i*3]*mag[i];D[i*3+1]=dir[i*3+1]*mag[i];D[i*3+2]=dir[i*3+2]*mag[i];
+    // Inward moves always get flip protection; outward moves only for small features — big outward flips are
+    // hidden creases (thighs/belly pressing together) and relaxing them leaves a lip.
+    eligible[i]=mag[i]<0||mag[i]<=H*0.02?1:0;
+  }
+  guardFlips(pos,D,rep,nb,geo.index?geo.index.array:null,eligible);
+
+  for(let i=0;i<n;i++){
+    const r=rep[i]*3;
+    pos.setXYZ(i,pos.getX(i)+D[r],pos.getY(i)+D[r+1],pos.getZ(i)+D[r+2]);
+  }
+
+  pos.needsUpdate=true;
+  geo.computeVertexNormals();
+  weldNormals(geo,rep);
+  // Authored normals carry the muscle detail; only hand shading over to recomputed normals where the surface really moved.
+  const nArr=geo.attributes.normal.array,full=H*0.02;
+  for(let i=0;i<n;i++){
+    const r=rep[i]*3,t=clamp(Math.hypot(D[r],D[r+1],D[r+2])/full,0,1);
+    const x=lerp(authoredN[i*3],nArr[i*3],t),y=lerp(authoredN[i*3+1],nArr[i*3+1],t),z=lerp(authoredN[i*3+2],nArr[i*3+2],t);
+    const l=Math.hypot(x,y,z)||1;
+    nArr[i*3]=x/l;nArr[i*3+1]=y/l;nArr[i*3+2]=z/l;
+  }
+  geo.attributes.normal.needsUpdate=true;
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+}
+
+function buildBody(){
+  if(bodyGroup){scene.remove(bodyGroup);bodyGroup.traverse(c=>{if(c.geometry)c.geometry.dispose()})}
+  bodyGroup=new THREE.Group();
+  allMeshes=[];
+
+  loadModel(currentBodyType,gltf=>{
+    const model=gltf.scene.clone(true);
+    model.traverse(c=>{if(c.isMesh&&c.geometry)c.geometry=c.geometry.clone()});
+
+    // Compute bounding box to normalize and position the model
+    const box=new THREE.Box3().setFromObject(model);
+    const size=new THREE.Vector3();box.getSize(size);
+    const center=new THREE.Vector3();box.getCenter(center);
+    modelBBox={box,size,center};
+
+    // Scale model to fit scene
+    const targetH=90;
+    const props=getBodyProportions();
+    const baseSc=targetH/size.y*(props?props.scaleY:1);
+    model.scale.set(baseSc, baseSc, baseSc);
+
+    bodyMesh=null;
+    model.traverse(c=>{if(c.isMesh&&(!bodyMesh||c.geometry.attributes.position.count>bodyMesh.geometry.attributes.position.count))bodyMesh=c});
+    buildRegionMap(bodyMesh.geometry,currentBodyType);
+    remapLegacyEntries(model);
+    applyBodyShape(model);
+
+    // Recompute after scale
+    const box2=new THREE.Box3().setFromObject(model);
+    const center2=new THREE.Vector3();box2.getCenter(center2);
+    const min2=box2.min;
+
+    // Center horizontally, feet on ground level
+    model.position.x=-center2.x;
+    model.position.z=-center2.z;
+    model.position.y=-min2.y;
+
+    // Apply skin material to all meshes and collect for raycasting
+    model.traverse(child=>{
+      if(child.isMesh){
+        child.material=skinMat;
+        allMeshes.push(child);
+      }
+    });
+    paintRegionDebug();
+
+    bodyGroup.add(model);
+
+    // Recompute model bbox in world space for region detection
+    const finalBox=new THREE.Box3().setFromObject(bodyGroup);
+    const finalSize=new THREE.Vector3();finalBox.getSize(finalSize);
+    const finalCenter=new THREE.Vector3();finalBox.getCenter(finalCenter);
+    modelBBox={box:finalBox,size:finalSize,center:finalCenter,min:finalBox.min,max:finalBox.max};
+    fitCamera();
+
+    renderMarkers3D();
+    scene.add(bodyGroup);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PAIN MARKERS IN 3D
+   ═══════════════════════════════════════════ */
+const painPins=[];
+
+// Anchors store a triangle + barycentric weights so markers follow the surface through any reshape.
+function makeAnchor(hit){
+  const mesh=hit.object,mi=allMeshes.indexOf(mesh);
+  if(mi<0||!hit.face)return null;
+  const pos=mesh.geometry.attributes.position,{a,b,c}=hit.face;
+  const va=new THREE.Vector3().fromBufferAttribute(pos,a);
+  const vb=new THREE.Vector3().fromBufferAttribute(pos,b);
+  const vc=new THREE.Vector3().fromBufferAttribute(pos,c);
+  const local=mesh.worldToLocal(hit.point.clone());
+  const bc=THREE.Triangle.getBarycoord(local,va,vb,vc,new THREE.Vector3());
+  if(!bc)return null;
+  return {mi,a,b,c,u:bc.x,v:bc.y,w:bc.z};
+}
+
+function entryWorld(e){
+  const an=e.anchor,mesh=an&&allMeshes[an.mi];
+  const pos=mesh&&mesh.geometry.attributes.position;
+  if(pos&&Math.max(an.a,an.b,an.c)<pos.count){
+    const va=new THREE.Vector3().fromBufferAttribute(pos,an.a);
+    const vb=new THREE.Vector3().fromBufferAttribute(pos,an.b);
+    const vc=new THREE.Vector3().fromBufferAttribute(pos,an.c);
+    const p=va.clone().multiplyScalar(an.u).addScaledVector(vb,an.v).addScaledVector(vc,an.w);
+    const n=new THREE.Triangle(va,vb,vc).getNormal(new THREE.Vector3());
+    mesh.localToWorld(p);
+    n.transformDirection(mesh.matrixWorld);
+    return {point:p,normal:n,mesh};
+  }
+  const n=e.normal||{x:0,y:0,z:1};
+  return {point:new THREE.Vector3(e.point.x,e.point.y,e.point.z),normal:new THREE.Vector3(n.x,n.y,n.z),mesh:null};
+}
+
+function bodyEntries(){return ST.entries.filter(e=>e.bodyType===currentBodyType)}
+function activeBodyEntries(){return bodyEntries().filter(e=>!e.resolved)}
+
+let pinHitMeshes=[];
+
+const PREVIEW_HEX='#22D3EE',PREVIEW_SIZE=7,MARKER_SIZE=6.5;
+function sevHex(s){return s<=3?'#34D399':s<=6?'#FBBF24':'#F43F5E'}
+
+// Dark outline under every ring keeps it readable on any skin tone.
+const texCache={};
+function markerTex(hex,{dot=false,fill=false}={}){
+  const key=hex+dot+fill;
+  if(texCache[key])return texCache[key];
+  const S=256,m=S/2,R=m*0.68,TAU=Math.PI*2;
+  const c=document.createElement('canvas');c.width=c.height=S;
+  const x=c.getContext('2d');
+  if(fill){
+    const gr=x.createRadialGradient(m,m,0,m,m,R);
+    gr.addColorStop(0,hex+'99');gr.addColorStop(1,hex+'1A');
+    x.fillStyle=gr;x.beginPath();x.arc(m,m,R,0,TAU);x.fill();
+  }
+  x.strokeStyle='rgba(6,16,24,0.78)';x.lineWidth=S*0.095;x.beginPath();x.arc(m,m,R,0,TAU);x.stroke();
+  x.strokeStyle=hex;x.lineWidth=S*0.05;x.beginPath();x.arc(m,m,R,0,TAU);x.stroke();
+  if(dot){
+    x.fillStyle='rgba(6,16,24,0.78)';x.beginPath();x.arc(m,m,S*0.07,0,TAU);x.fill();
+    x.fillStyle=hex;x.beginPath();x.arc(m,m,S*0.042,0,TAU);x.fill();
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  t.anisotropy=4;
+  return texCache[key]=t;
+}
+
+function makeDecal(mesh,point,normal,size,tex){
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal);
+  const geo=new DecalGeometry(mesh,point,new THREE.Euler().setFromQuaternion(q),new THREE.Vector3(size,size,size*0.8));
+  const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,toneMapped:false});
+  const d=new THREE.Mesh(geo,mat);
+  d.renderOrder=1;
+  return d;
+}
+function pickEntry(){
+  const hits=raycaster.intersectObjects(pinHitMeshes.concat(allMeshes),false);
+  if(!hits.length)return null;
+  const id=hits[0].object.userData.entryId;
+  if(id)return ST.entries.find(x=>x.id===id)||null;
+  return nearestEntry(hits[0].point,12);
+}
+
+function nearestEntry(hitPoint,maxDist){
+  let best=null,bestD=maxDist;
+  activeBodyEntries().forEach(e=>{
+    const d=entryWorld(e).point.distanceTo(hitPoint);
+    if(d<bestD){bestD=d;best=e}
+  });
+  return best;
+}
+
+function renderMarkers3D(){
+  if(!bodyGroup)return;
+  const toRemove=bodyGroup.children.filter(c=>c.userData&&c.userData.isPainPin);
+  toRemove.forEach(c=>{
+    bodyGroup.remove(c);
+    c.traverse(ch=>{if(ch.geometry)ch.geometry.dispose();if(ch.material)ch.material.dispose()});
+  });
+  painPins.length=0;
+  pinHitMeshes=[];
+  if(!showMarkers)return;
+  bodyGroup.updateMatrixWorld(true);
+  activeBodyEntries().forEach(e=>{
+    const hex=sevHex(e.severity),col=new THREE.Color(hex);
+    const w=entryWorld(e),n=w.normal.normalize();
+    const g=new THREE.Group();
+    g.userData={isPainPin:true,entryId:e.id};
+
+    const halo=makeDecal(w.mesh||allMeshes[0],w.point,n,MARKER_SIZE,markerTex(hex,{fill:true}));
+    g.add(halo);
+
+    // Seated in the skin: centre just outside the surface so a little over half the sphere shows.
+    const stud=new THREE.Mesh(new THREE.SphereGeometry(1.25,24,16),
+      new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.45,roughness:0.35,metalness:0.05}));
+    stud.position.copy(w.point).addScaledVector(n,0.35);
+    g.add(stud);
+
+    const hit=new THREE.Mesh(new THREE.SphereGeometry(3,10,8),new THREE.MeshBasicMaterial({visible:false}));
+    hit.position.copy(w.point).addScaledVector(n,0.8);
+    g.add(hit);
+
+    painPins.push({stud,halo,time:Math.random()*Math.PI*2});
+    stud.userData.entryId=hit.userData.entryId=e.id;
+    pinHitMeshes.push(stud,hit);
+    bodyGroup.add(g);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PREVIEW MARKER (shown before saving)
+   ═══════════════════════════════════════════ */
+let previewPin=null;
+
+function showPreviewPin(point,normal,hitMesh){
+  clearPreviewPin();
+  const nv=new THREE.Vector3(normal.x,normal.y,normal.z).normalize();
+  const g=new THREE.Group();
+  g.userData={isPreview:true};
+  const decal=makeDecal(hitMesh,point.clone(),nv,PREVIEW_SIZE,markerTex(PREVIEW_HEX,{dot:true}));
+  g.add(decal);
+  previewPin={group:g,decalMat:decal.material};
+  bodyGroup.add(g);
+}
+function clearPreviewPin(){
+  if(!previewPin||!bodyGroup)return;
+  bodyGroup.remove(previewPin.group);
+  previewPin.group.traverse(ch=>{if(ch.geometry)ch.geometry.dispose();if(ch.material)ch.material.dispose()});
+  previewPin=null;
+}
+
+/* ═══════════════════════════════════════════
+   REGION MAP — hidden per-vertex anatomy labels
+   ═══════════════════════════════════════════ */
+// Landmarks measured from each GLB's own cross-sections (fractions of body height, mesh-local space).
+// Heights are relY (0 = soles, 1 = crown). Arm values are distances along the arm axis from the body's centre line.
+// Both models face +z, so +x is the patient's LEFT.
+const REGION_LM={
+  male:{crotch:.465,navel:.605,chestBot:.68,armpit:.765,neckBase:.83,chin:.87,mouth:.905,brow:.95,crown:.98,
+    ankle:.055,knee:.265,toeZ:.079,heelZ:-.005,bigToeX:.058,shoulderX:.09,female:false,
+    arm:{o:[0,.7997,-.0134],v:[.999,.003,.036],start:.115,shoulder:.16,elbow:.245,wrist:.385,knuckle:.447,
+      thumb:[.41,.465],thumbDir:[0,1,0],thumbMin:.028,palm:[0,0,1]}},
+  female:{crotch:.535,navel:.655,chestBot:.715,armpit:.785,neckBase:.845,chin:.885,mouth:.915,brow:.955,crown:.98,
+    ankle:.065,knee:.34,toeZ:.06,heelZ:-.04,bigToeX:.082,shoulderX:.105,female:true,
+    arm:{o:[0,.8458,-.0116],v:[.934,-.351,.068],start:.12,shoulder:.165,elbow:.255,wrist:.42,knuckle:.49,
+      thumb:[.445,.495],thumbDir:[-.064,.024,.998],thumbMin:.03,palm:[-.352,-.936,0]}}
+};
+
+// xs = signed x/H from centre line, r = relY, z = z/H; normal in mesh space. Returns [name, isSided].
+function classifyRegion(xs,r,z,nx,ny,nz,L){
+  const ax=Math.abs(xs),mnx=xs<0?-nx:nx,A=L.arm;
+  const dx=ax-A.o[0],dy=r-A.o[1],dz=z-A.o[2];
+  const s=dx*A.v[0]+dy*A.v[1]+dz*A.v[2];
+  const px=dx-A.v[0]*s,py=dy-A.v[1]*s,pz=dz-A.v[2]*s;
+  if(r>L.crotch&&s>A.start&&Math.hypot(px,py,pz)<0.09){
+    if(s<A.shoulder)return['Shoulder',1];
+    if(s<A.elbow-.025)return['Upper Arm',1];
+    if(s<A.elbow+.025)return['Elbow',1];
+    if(s<A.wrist-.018)return['Forearm',1];
+    if(s<A.wrist+.018)return['Wrist',1];
+    if(s>=A.thumb[0]&&s<=A.thumb[1]&&px*A.thumbDir[0]+py*A.thumbDir[1]+pz*A.thumbDir[2]>A.thumbMin)return['Thumb',1];
+    if(s>=A.knuckle)return['Fingers',1];
+    const pd=mnx*A.palm[0]+ny*A.palm[1]+nz*A.palm[2];
+    return[pd>.35?'Palm':pd<-.35?'Back of Hand':'Hand',1];
+  }
+  if(r<L.crotch){
+    if(r>L.crotch-.035&&nz<-.3)return['Buttock',1];
+    if(r<L.ankle-.02){
+      if(z>L.toeZ)return[ax<L.bigToeX?'Big Toe':'Toes',1];
+      if(z<L.heelZ)return['Heel',1];
+      return[ny<-.6?'Sole of Foot':'Top of Foot',1];
+    }
+    if(r<L.ankle+.025)return['Ankle',1];
+    if(r<L.knee-.03)return[nz>=0?'Shin':'Calf',1];
+    if(r<L.knee+.035)return[nz>=0?'Knee':'Back of Knee',1];
+    if(mnx<-.55)return[r>L.crotch-.04&&nz>.1?'Groin':'Inner Thigh',1];
+    return[nz>=0?'Thigh':'Back of Thigh',1];
+  }
+  const front=nz>.2,back=nz<-.2,mid=ax<.02;
+  if(r<L.crotch+.055){
+    if(back)return['Buttock',1];
+    if(front&&ax<.06)return['Groin',0];
+    return['Hip',1];
+  }
+  if(r<L.chestBot){
+    if(front){
+      if(Math.abs(r-L.navel)<.015&&ax<.03)return['Navel',0];
+      return[r<L.navel?'Lower Abdomen':'Upper Abdomen',mid?0:1];
+    }
+    if(back)return[r<L.navel+.03?'Lower Back':'Mid Back',mid?0:1];
+    return[r<L.navel-.04?'Hip':'Flank',1];
+  }
+  if(r<L.armpit+.01){
+    if(front){
+      if(ax<.018)return['Breastbone',0];
+      return[L.female&&ax>.035?'Breast':'Chest',1];
+    }
+    if(back)return[r<L.chestBot+.03?'Mid Back':ax>.045?'Shoulder Blade':'Upper Back',mid?0:1];
+    return[r>L.armpit-.035?'Armpit':'Side of Chest',1];
+  }
+  if(r<L.neckBase){
+    if(ax>L.shoulderX||(ny>.7&&ax>.04))return['Shoulder',1];
+    if(front)return['Collarbone',1];
+    return[ax>.045?'Shoulder Blade':'Upper Back',mid?0:1];
+  }
+  if(r<L.chin){
+    if(front)return['Throat',0];
+    if(back)return['Back of Neck',0];
+    return['Side of Neck',1];
+  }
+  if(r>L.crown||ny>.75)return['Top of Head',0];
+  if(nz<-.35)return['Back of Head',0];
+  if(Math.abs(nx)>.6&&nz<.45)return['Side of Head',1];
+  if(r<L.mouth)return['Jaw',0];
+  if(r>L.brow)return['Forehead',0];
+  return['Face',0];
+}
+
+// Built once per body type from the untouched mesh; reshaping never changes vertex order, so labels stay valid.
+const regionMaps={};
+function buildRegionMap(geo,type){
+  if(regionMaps[type])return regionMaps[type];
+  const L=REGION_LM[type],pos=geo.attributes.position,nor=geo.attributes.normal,n=pos.count;
+  geo.computeBoundingBox();
+  const bb=geo.boundingBox,H=bb.max.y-bb.min.y,cx=(bb.min.x+bb.max.x)/2;
+  const labels=[],lookup=new Map(),idx=new Uint16Array(n);
+  for(let i=0;i<n;i++){
+    const xs=(pos.getX(i)-cx)/H;
+    const [name,sided]=classifyRegion(xs,(pos.getY(i)-bb.min.y)/H,pos.getZ(i)/H,nor.getX(i),nor.getY(i),nor.getZ(i),L);
+    const label=sided?(xs>0?'Left ':'Right ')+name:name;
+    let k=lookup.get(label);
+    if(k===undefined){k=labels.length;labels.push(label);lookup.set(label,k)}
+    idx[i]=k;
+  }
+  return regionMaps[type]={labels,idx};
+}
+
+// Entries saved before the region map had left/right mirrored (viewer's side, not the patient's).
+// Re-derive their label from the saved surface anchor, or flip the side word if there's no anchor.
+function remapLegacyEntries(model){
+  let k=0,bodyIdx=-1;
+  model.traverse(c=>{if(c.isMesh){if(c===bodyMesh)bodyIdx=k;k++}});
+  let changed=false;
+  const flip=s=>s.replace(/\b(Left|Right)\b/g,m=>m==='Left'?'Right':'Left');
+  bodyEntries().forEach(e=>{
+    if(e.regionVer)return;
+    const an=e.anchor;
+    if(an&&an.mi===bodyIdx){
+      const w=[an.u,an.v,an.w],vs=[an.a,an.b,an.c];
+      const r=regionAtVertex(vs[w.indexOf(Math.max(...w))]);
+      e.label=r.label;e.regionId=r.id;
+    }else{
+      e.label=flip(e.label);e.regionId=regionSlug(e.label);
+    }
+    if(e.viewLabel)e.viewLabel=flip(e.viewLabel);
+    e.regionVer=1;changed=true;
+  });
+  if(changed){save();renderLog();renderSummary()}
+}
+
+function regionSlug(label){return label.toLowerCase().replace(/[^a-z]+/g,'-')}
+function regionAtVertex(v){
+  const map=regionMaps[currentBodyType];
+  const label=map?map.labels[map.idx[v]]:'Body';
+  return{id:regionSlug(label),label};
+}
+
+function detectRegion(hit){
+  if(hit.object===bodyMesh&&hit.face){
+    // Use whichever corner of the hit triangle is closest to the click.
+    const local=bodyMesh.worldToLocal(hit.point.clone()),pos=bodyMesh.geometry.attributes.position;
+    let best=hit.face.a,bd=Infinity;
+    for(const v of [hit.face.a,hit.face.b,hit.face.c]){
+      const d=local.distanceToSquared(new THREE.Vector3().fromBufferAttribute(pos,v));
+      if(d<bd){bd=d;best=v}
+    }
+    return regionAtVertex(best);
+  }
+  if(hit.object!==bodyMesh){
+    const label=(hit.point.x>0?'Left':'Right')+' Eye';
+    return{id:regionSlug(label),label};
+  }
+  return{id:'body',label:'Body'};
+}
+
+// Debug view: add #regions to the URL to colour the model by region.
+function paintRegionDebug(){
+  const map=regionMaps[currentBodyType];
+  if(!map||!bodyMesh||!location.hash.includes('regions'))return;
+  const geo=bodyMesh.geometry,n=geo.attributes.position.count,col=new Float32Array(n*3),c=new THREE.Color();
+  const hue=s=>{let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))>>>0;return(h%360)/360};
+  for(let i=0;i<n;i++){
+    const label=map.labels[map.idx[i]],base=label.replace(/^(Left|Right) /,'');
+    c.setHSL(hue(base),.65,label.startsWith('Left')?.62:label.startsWith('Right')?.42:.52);
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+  }
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  bodyMesh.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.7,side:THREE.DoubleSide});
+}
+
+/* ═══════════════════════════════════════════
+   THREE.JS SCENE SETUP
+   ═══════════════════════════════════════════ */
+let scene,camera,renderer,raycaster,mouse;
+
+function isDark(){
+  return document.documentElement.dataset.theme==='dark'||
+    (!document.documentElement.dataset.theme&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+}
+function sceneBG(){return isDark()?0x162430:0xE8F0F3}
+
+function initScene(){
+  const container=document.getElementById('viewer');
+  const w=container.clientWidth,h=container.clientHeight;
+
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(sceneBG());
+
+  camera=new THREE.PerspectiveCamera(38,w/h,1,500);
+  camera.position.set(0,50,160);
+  camera.lookAt(0,45,0);
+
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(w,h);
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.05;
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const hemi=new THREE.HemisphereLight(0xffeedd,0x556677,0.7);
+  scene.add(hemi);
+  const key=new THREE.DirectionalLight(0xfff5ee,0.9);
+  key.position.set(30,60,50);
+  scene.add(key);
+  const fill=new THREE.DirectionalLight(0xeef0ff,0.35);
+  fill.position.set(-20,40,30);
+  scene.add(fill);
+  const rim=new THREE.DirectionalLight(0xccddff,0.3);
+  rim.position.set(0,30,-50);
+  scene.add(rim);
+
+  raycaster=new THREE.Raycaster();
+  mouse=new THREE.Vector2();
+
+  initMaterials();
+
+  // Resize
+  const ro=new ResizeObserver(entries=>{
+    const{width:rw,height:rh}=entries[0].contentRect;
+    if(rw<1||rh<1)return;
+    camera.aspect=rw/rh;
+    camera.updateProjectionMatrix();
+    renderer.setSize(rw,rh);
+    fitCamera();
+  });
+  ro.observe(container);
+
+  // Theme observer
+  const mo=new MutationObserver(()=>{scene.background.set(sceneBG())});
+  mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{scene.background.set(sceneBG())});
+
+  setupControls(container);
+}
+
+/* ═══════════════════════════════════════════
+   ORBIT CONTROLS (manual)
+   ═══════════════════════════════════════════ */
+let theta=0,phi=Math.PI/2.15,dist=160;
+let targetTheta=0,targetPhi=Math.PI/2.15;
+let animating=false,animProg=0,startTheta=0,startPhi=0;
+let lookY=45,minDist=50,maxDist=200,userZoomed=false;
+
+function fitCamera(){
+  if(!modelBBox||!camera)return;
+  const s=modelBBox.size;
+  const vFov=THREE.MathUtils.degToRad(camera.fov);
+  const tanHalf=Math.tan(vFov/2);
+  const margin=1.12;
+  const dH=(s.y*margin/2)/tanHalf;
+  const dW=(Math.max(s.x,s.z)*margin/2)/(tanHalf*camera.aspect);
+  const fit=Math.max(dH,dW)+s.z/2;
+  lookY=modelBBox.center.y;
+  minDist=fit*0.35;
+  maxDist=fit*1.4;
+  if(!userZoomed)dist=fit;
+  dist=clamp(dist,minDist,maxDist);
+  updateCamera();
+}
+
+function updateCamera(){
+  camera.position.x=dist*Math.sin(phi)*Math.sin(theta);
+  camera.position.y=dist*Math.cos(phi)+lookY;
+  camera.position.z=dist*Math.sin(phi)*Math.cos(theta);
+  camera.lookAt(0,lookY,0);
+  camera.updateMatrixWorld();
+}
+
+let lastDownX=0,lastDownY=0,zoomHintTimer=null;
+const HINT_NEW='Click on body to mark pain · Drag to rotate · Ctrl + scroll to zoom';
+const HINT_MARKERS='Click a marker to view entry · Drag to rotate · Ctrl + scroll to zoom';
+
+function flashZoomHint(){
+  const hint=document.getElementById('zhint');
+  hint.textContent='Hold Ctrl and scroll to zoom the model';
+  hint.classList.add('active');
+  clearTimeout(zoomHintTimer);
+  zoomHintTimer=setTimeout(()=>{hint.textContent=showMarkers?HINT_MARKERS:HINT_NEW;hint.classList.remove('active')},1400);
+}
+
+function setupControls(el){
+  let dragging=false,downX=0,downY=0,prevX=0,prevY=0,moved=false;
+  let pinchDist=0;
+
+  el.addEventListener('pointerdown',e=>{
+    if(e.button>0)return;
+    dragging=true;moved=false;
+    downX=prevX=lastDownX=e.clientX;downY=prevY=lastDownY=e.clientY;
+    animating=false;
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const dx=e.clientX-prevX,dy=e.clientY-prevY;
+    const totalDx=e.clientX-downX,totalDy=e.clientY-downY;
+    if(Math.abs(totalDx)+Math.abs(totalDy)>12)moved=true;
+    if(moved){
+      theta-=dx*0.008;
+      phi-=dy*0.008;
+      phi=Math.max(0.15,Math.min(Math.PI-0.15,phi));
+      updateCamera();
+    }
+    prevX=e.clientX;prevY=e.clientY;
+  });
+  el.addEventListener('pointerup',e=>{
+    if(!moved&&dragging)handleClick(e,el);
+    dragging=false;
+  });
+  el.addEventListener('click',e=>{
+    if(!moved)handleClick(e,el);
+  });
+  el.addEventListener('wheel',e=>{
+    if(!e.ctrlKey&&!e.metaKey){flashZoomHint();return}
+    e.preventDefault();
+    dist*=(1+e.deltaY*0.001);
+    dist=clamp(dist,minDist,maxDist);userZoomed=true;
+    updateCamera();
+  },{passive:false});
+
+  // Touch pinch zoom
+  el.addEventListener('touchstart',e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchDist=Math.sqrt(dx*dx+dy*dy);
+    }
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const nd=Math.sqrt(dx*dx+dy*dy);
+      if(pinchDist>0){
+        dist*=(pinchDist/nd);
+        dist=clamp(dist,minDist,maxDist);userZoomed=true;
+        updateCamera();
+      }
+      pinchDist=nd;
+    }
+  },{passive:true});
+
+  // Hover detection
+  el.addEventListener('mousemove',e=>{
+    if(dragging)return;
+    const rect=renderer.domElement.getBoundingClientRect();
+    mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+    mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    const hint=document.getElementById('zhint');
+
+    if(showMarkers){
+      const near=pickEntry();
+      if(near){hint.textContent=near.label+' — click to view';hint.classList.add('active');el.style.cursor='pointer';return}
+      hint.textContent=activeBodyEntries().length?HINT_MARKERS:'No active markers on this body · Turn Markers off to log new pain';
+      hint.classList.remove('active');
+      el.style.cursor='grab';
+      return;
+    }
+
+    const hits=raycaster.intersectObjects(allMeshes);
+    if(hits.length>0){
+      const r=detectRegion(hits[0]);
+      if(r){hint.textContent=r.label;hint.classList.add('active');el.style.cursor='crosshair';return}
+    }
+    hint.textContent=HINT_NEW;
+    hint.classList.remove('active');
+    el.style.cursor='grab';
+  });
+}
+
+function handleClick(e,el){
+  const rect=el.getBoundingClientRect();
+  const ex=e.clientX||lastDownX,ey=e.clientY||lastDownY;
+  mouse.x=((ex-rect.left)/rect.width)*2-1;
+  mouse.y=-((ey-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+
+  if(showMarkers){
+    const near=pickEntry();
+    if(near)editEntry(near);
+    return;
+  }
+
+  const hits=raycaster.intersectObjects(allMeshes,true);
+  if(hits.length===0)return;
+  const hit=hits[0];
+  const region=detectRegion(hit);
+  if(!region)return;
+  const viewName=currentViewName();
+  const normal=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize():new THREE.Vector3(0,0,1);
+  const nObj={x:normal.x,y:normal.y,z:normal.z};
+  ST.clickPt={point:hit.point.clone(),normal:nObj,region,view:viewName,anchor:makeAnchor(hit)};
+  ST.editId=null;
+  showPreviewPin(hit.point,nObj,hit.object);
+  openForm(region.label,viewName);
+}
+
+// Named from the patient's perspective: the camera on +x is looking at the patient's left side.
+function currentViewName(){
+  const t=Math.atan2(Math.sin(theta),Math.cos(theta));
+  if(Math.abs(t)<Math.PI/4)return'Front';
+  if(Math.abs(t)>Math.PI*3/4)return'Back';
+  return t>0?'Left Side':'Right Side';
+}
+
+function animToView(name){
+  const P=Math.PI/2.15;
+  const views={front:{t:0,p:P},back:{t:Math.PI,p:P},left:{t:Math.PI/2,p:P},right:{t:-Math.PI/2,p:P}};
+  const v=views[name];if(!v)return;
+  startTheta=theta;startPhi=phi;
+  targetTheta=v.t;targetPhi=v.p;
+  // Shortest rotation path
+  while(targetTheta-startTheta>Math.PI)startTheta+=Math.PI*2;
+  while(targetTheta-startTheta<-Math.PI)startTheta-=Math.PI*2;
+  animating=true;animProg=0;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════ */
+function animate(){
+  requestAnimationFrame(animate);
+  if(animating){
+    animProg+=0.035;
+    if(animProg>=1){
+      animating=false;theta=targetTheta;phi=targetPhi;
+    }else{
+      theta=lerp(startTheta,targetTheta,easeIO(animProg));
+      phi=lerp(startPhi,targetPhi,easeIO(animProg));
+    }
+    updateCamera();
+  }
+  const t=performance.now()*0.001;
+
+  // Pulse pain markers
+  painPins.forEach(pin=>{
+    const s=Math.sin(t*2.2+pin.time);
+    pin.stud.material.emissiveIntensity=0.4+0.2*s;
+    pin.halo.material.opacity=0.8+0.2*s;
+  });
+
+  if(previewPin)previewPin.decalMat.opacity=0.78+0.22*Math.sin(t*3.2);
+
+  renderer.render(scene,camera);
+}
+
+/* ═══════════════════════════════════════════
+   APPLICATION STATE & PAIN TRACKING
+   ═══════════════════════════════════════════ */
+const ST={clickPt:null,editId:null,entries:[],tombstones:[],filter:'all',htFt:0,htIn:0,wt:0,age:0,shape:{},profileUpdatedAt:0};
+// Records a deletion so it correctly removes the entry on other devices during a future sync merge.
+function tombstone(ids){
+  const now=Date.now();
+  (Array.isArray(ids)?ids:[ids]).forEach(id=>ST.tombstones.push({id,deletedAt:now}));
+  saveTombstones();
+}
+function saveTombstones(){try{localStorage.setItem('bpt_tombstones',JSON.stringify(ST.tombstones))}catch{}markDirty()}
+function loadTombstones(){try{const d=localStorage.getItem('bpt_tombstones');if(d)ST.tombstones=JSON.parse(d)}catch{}}
+
+/* ═══════════════════════════════════════════
+   DATE/TIME PICKER (ported from Life Line's llp)
+   ═══════════════════════════════════════════ */
+const dtp={
+  sel:new Date(),viewDate:new Date(),calView:'month',isOpen:false,H:12,M:0,AP:'AM',yearPageStart:null,
+  _MN:['January','February','March','April','May','June','July','August','September','October','November','December'],
+  _WD:['Su','Mo','Tu','We','Th','Fr','Sa'],
+  _p:n=>String(n).padStart(2,'0'),
+  $:id=>document.getElementById(id),
+  init(){
+    this.$('dtp-wd').innerHTML=this._WD.map(d=>`<div class="dtp-wd">${d}</div>`).join('');
+    this.$('dtp-trig').addEventListener('click',e=>{e.stopPropagation();this.toggle()});
+    document.querySelectorAll('.dtp-ap').forEach(b=>b.addEventListener('click',()=>this.setAP(b.dataset.a)));
+    document.querySelectorAll('.dtp-cv').forEach(b=>b.addEventListener('click',()=>b.dataset.adj==='h'?this.adjH(+b.dataset.d):this.adjM(+b.dataset.d)));
+    this.$('dtp-prev').addEventListener('click',()=>this.navPrev());
+    this.$('dtp-next').addEventListener('click',()=>this.navNext());
+    this.$('dtp-lbl').addEventListener('click',()=>this.toggleView());
+    this.$('dtp-today').addEventListener('click',()=>this.goToday());
+    this.$('dtp-ok').addEventListener('click',()=>this.confirm());
+    document.addEventListener('click',e=>{if(this.isOpen&&!this.$('dtp-root').contains(e.target))this.close()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&this.isOpen){this.close();this.$('dtp-trig').focus()}});
+    this.setValue(new Date());
+  },
+  getValue(){
+    const d=new Date(this.sel);
+    let h=this.H%12;if(this.AP==='PM')h+=12;
+    d.setHours(h,this.M,0,0);
+    return d;
+  },
+  getLocalString(){
+    const d=this.getValue(),p=this._p;
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  },
+  setValue(date){
+    this.sel=new Date(date);
+    this.viewDate=new Date(date.getFullYear(),date.getMonth(),1);
+    this.H=date.getHours()%12||12;
+    this.M=Math.round(date.getMinutes()/5)*5%60;
+    this.AP=date.getHours()>=12?'PM':'AM';
+    if(this.calView!=='month'){this.calView='month';this._showV('month')}
+    this._renderCal();this._upd();this._syncT();this._syncAP();
+  },
+  open(){this.isOpen=true;this.$('dtp').classList.remove('closed');this.$('dtp-trig').setAttribute('aria-expanded','true')},
+  close(){this.isOpen=false;this.$('dtp').classList.add('closed');this.$('dtp-trig').setAttribute('aria-expanded','false')},
+  toggle(){this.isOpen?this.close():this.open()},
+  confirm(){this.close();this.$('dtp-trig').focus()},
+  goToday(){this.setValue(new Date())},
+  navMonth(d){this.viewDate=new Date(this.viewDate.getFullYear(),this.viewDate.getMonth()+d,1);this._renderCal()},
+  toggleView(){
+    this.calView=this.calView==='month'?'year':'month';
+    this._showV(this.calView);
+    if(this.calView==='year'){this.yearPageStart=null;this._renderYears()}else this._renderCal();
+  },
+  navPrev(){this.calView==='year'?this.navYears(-1):this.navMonth(-1)},
+  navNext(){this.calView==='year'?this.navYears(1):this.navMonth(1)},
+  navYears(d){this.yearPageStart+=d*16;this._renderYears()},
+  adjH(d){this.H=((this.H-1+d+12)%12)+1;this._syncT();this._upd()},
+  adjM(d){this.M=(this.M+d*5+60)%60;this._syncT();this._upd()},
+  setAP(v){this.AP=v;this._syncAP();this._upd()},
+  _upd(){
+    this.$('dtp-tdate').textContent=this.sel.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
+    this.$('dtp-ttime').textContent=`${this._p(this.H)}:${this._p(this.M)} ${this.AP}`;
+  },
+  _syncT(){this.$('dtp-hn').textContent=this._p(this.H);this.$('dtp-mn').textContent=this._p(this.M)},
+  _syncAP(){document.querySelectorAll('.dtp-ap').forEach(b=>{const on=b.dataset.a===this.AP;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on))})},
+  _showV(v){this.$('dtp-calsec').hidden=v!=='month';this.$('dtp-yrsec').hidden=v!=='year'},
+  _updateHeader(){
+    const lbl=this.$('dtp-lbl');
+    if(this.calView==='month'){lbl.textContent=`${this._MN[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;lbl.title='Switch to year view'}
+    else{const st=this.yearPageStart||0;lbl.textContent=`${st} – ${st+15}`;lbl.title='Back to calendar'}
+  },
+  _renderCal(){
+    const yr=this.viewDate.getFullYear(),mo=this.viewDate.getMonth();
+    this._updateHeader();
+    const first=new Date(yr,mo,1).getDay(),dim=new Date(yr,mo+1,0).getDate(),prev=new Date(yr,mo,0).getDate();
+    const cells=[];
+    for(let i=first-1;i>=0;i--)cells.push({n:prev-i,o:true});
+    for(let d=1;d<=dim;d++)cells.push({n:d,o:false,dt:new Date(yr,mo,d)});
+    while(cells.length<42)cells.push({n:cells.length-first-dim+1,o:true});
+    const now=new Date().toDateString(),sel=this.sel.toDateString(),dy=this.$('dtp-dy');
+    dy.innerHTML='';
+    cells.forEach(({n,o,dt})=>{
+      const b=document.createElement('button');
+      b.type='button';b.className='dtp-day'+(o?' oth':'');b.textContent=n;
+      if(o){b.tabIndex=-1;b.setAttribute('aria-hidden','true')}
+      else{
+        if(dt.toDateString()===now)b.classList.add('tod');
+        if(dt.toDateString()===sel){b.classList.add('sel');b.setAttribute('aria-pressed','true')}
+        b.setAttribute('aria-label',dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}));
+        b.addEventListener('click',e=>{e.stopPropagation();this.sel=new Date(dt);this._renderCal();this._upd()});
+      }
+      dy.appendChild(b);
+    });
+  },
+  _renderYears(){
+    const cyr=new Date().getFullYear(),syr=this.viewDate.getFullYear();
+    if(this.yearPageStart===null)this.yearPageStart=syr-7;
+    this._updateHeader();
+    const st=this.yearPageStart,el=this.$('dtp-yr');
+    el.innerHTML='';
+    for(let y=st;y<st+16;y++){
+      const b=document.createElement('button');
+      b.type='button';b.className='dtp-yr'+(y===cyr?' cyr':'')+(y===syr?' syr':'');b.textContent=y;
+      b.addEventListener('click',e=>{e.stopPropagation();this.yearPageStart=null;this.viewDate=new Date(y,this.viewDate.getMonth(),1);this.calView='month';this._showV('month');this._renderCal()});
+      el.appendChild(b);
+    }
+  }
+};
+
+function openForm(label,viewName){
+  const form=document.getElementById('eform');
+  form.hidden=false;
+  document.getElementById('ftitle').textContent='Log Pain';
+  document.getElementById('floc').value=`${label} — ${viewName}`;
+  document.getElementById('fsev').value=5;updateSev(5);
+  document.getElementById('ftype').value='sharp';
+  document.getElementById('fdur').value='';
+  document.getElementById('fnotes').value='';
+  dtp.setValue(new Date());
+  document.getElementById('fsave').textContent='Save Entry';
+  form.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function editEntry(entry){
+  ST.editId=entry.id;
+  ST.clickPt={point:new THREE.Vector3(entry.point.x,entry.point.y,entry.point.z),region:{id:entry.regionId,label:entry.label},view:entry.viewLabel};
+  const form=document.getElementById('eform');
+  form.hidden=false;
+  document.getElementById('ftitle').textContent='Edit Entry';
+  document.getElementById('floc').value=`${entry.label} — ${entry.viewLabel}`;
+  document.getElementById('fsev').value=entry.severity;updateSev(entry.severity);
+  document.getElementById('ftype').value=entry.painType;
+  document.getElementById('fdur').value=entry.duration;
+  document.getElementById('fnotes').value=entry.notes;
+  const d=new Date(entry.date);
+  dtp.setValue(isNaN(d)?new Date():d);
+  document.getElementById('fsave').textContent='Update Entry';
+  form.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeForm(){ST.clickPt=null;ST.editId=null;clearPreviewPin();dtp.close();document.getElementById('eform').hidden=true}
+
+function saveEntry(){
+  const loc=document.getElementById('floc').value;
+  const sev=+document.getElementById('fsev').value;
+  const pt=document.getElementById('ftype').value;
+  const dur=document.getElementById('fdur').value.trim();
+  const notes=document.getElementById('fnotes').value.trim();
+  const dt=dtp.getLocalString();
+  const wasEdit=!!ST.editId;
+  if(!wasEdit&&!ST.clickPt)return;
+
+  if(ST.editId){
+    const e=ST.entries.find(x=>x.id===ST.editId);
+    if(e){e.severity=sev;e.painType=pt;e.duration=dur;e.notes=notes;e.date=dt;e.label=loc.split(' — ')[0];e.updatedAt=Date.now()}
+  }else if(ST.clickPt){
+    const p=ST.clickPt.point;
+    ST.entries.push({
+      id:crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2),
+      regionId:ST.clickPt.region.id,
+      label:loc.split(' — ')[0],
+      viewLabel:ST.clickPt.view,
+      point:{x:p.x,y:p.y,z:p.z},
+      normal:ST.clickPt.normal||{x:0,y:0,z:1},
+      anchor:ST.clickPt.anchor||null,
+      bodyType:currentBodyType,
+      regionVer:1,
+      severity:sev,painType:pt,duration:dur,notes,date:dt,resolved:false,
+      updatedAt:Date.now()
+    });
+  }
+  save();closeForm();renderLog();renderSummary();
+  buildBody();
+  toast(wasEdit?'Entry updated':'Pain entry saved');
+}
+
+function sevColor(v){return v<=3?'var(--green)':v<=6?'var(--amber)':'var(--red)'}
+function updateSev(v){v=+v;document.getElementById('sbadge').textContent=v;document.getElementById('sbadge').style.background=sevColor(v);document.getElementById('sev-fill').style.width=(v*10)+'%';document.getElementById('sev-fill').style.background=sevColor(v)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):''}
+function fmtDate(d){
+  if(!d)return'—';
+  const x=new Date(d);
+  return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function save(){try{localStorage.setItem('bpt_entries',JSON.stringify(ST.entries))}catch{}markDirty()}
+function load(){try{const d=localStorage.getItem('bpt_entries');if(d)ST.entries=JSON.parse(d)}catch{}
+  // Entries from before sync have no edit time. Mark them as oldest-possible so any real edit or
+  // deletion from another device wins; stamping "now" would let a stale copy undo a later deletion.
+  let changed=false;
+  ST.entries.forEach(e=>{if(!e.updatedAt){e.updatedAt=1;changed=true}});
+  if(changed)save();
+}
+// saveProfile = a user edit (stamps the time sync uses to pick the newest profile); persistProfile = store only.
+function saveProfile(){ST.profileUpdatedAt=Date.now();persistProfile()}
+function persistProfile(){try{localStorage.setItem('bpt_profile',JSON.stringify({htFt:ST.htFt,htIn:ST.htIn,wt:ST.wt,age:ST.age,bodyType:currentBodyType,shape:ST.shape,profileUpdatedAt:ST.profileUpdatedAt}))}catch{}markDirty()}
+function loadProfile(){try{const d=localStorage.getItem('bpt_profile');if(d){const p=JSON.parse(d);ST.htFt=p.htFt||0;ST.htIn=p.htIn||0;ST.wt=p.wt||0;ST.age=p.age||0;ST.profileUpdatedAt=p.profileUpdatedAt||0;if(p.bodyType)currentBodyType=p.bodyType;if(p.shape&&typeof p.shape==='object')SHAPE_PARTS.forEach(sp=>{const v=+p.shape[sp.id];if(v)ST.shape[sp.id]=clamp(v,-1,1)});document.getElementById('ht-ft').value=ST.htFt||'';document.getElementById('ht-in').value=ST.htIn||'';document.getElementById('wt').value=ST.wt||'';document.getElementById('age').value=ST.age||'';document.getElementById('body-toggle').textContent=currentBodyType==='male'?'Male':'Female'}}catch{}}
+
+function renderLog(){
+  const list=document.getElementById('llist');
+  let ents=[...ST.entries].sort((a,b)=>b.date.localeCompare(a.date));
+  if(ST.filter==='active')ents=ents.filter(e=>!e.resolved);
+  if(ST.filter==='resolved')ents=ents.filter(e=>e.resolved);
+  const badge=document.getElementById('pct-badge');
+  if(badge)badge.textContent=ST.entries.length;
+  updateBodyToggle();
+  if(!ents.length){list.innerHTML='<div class="empty">No entries match this filter.</div>';return}
+  list.innerHTML=ents.map(e=>`
+    <div class="log-item${e.resolved?' resolved':''}" data-id="${esc(e.id)}">
+      <div class="log-dot" style="color:${sevColor(e.severity)};background:currentColor"></div>
+      <div class="log-body">
+        <div class="log-loc">${esc(e.label)} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span></div>
+        <div class="log-meta">${esc(cap(e.painType))} · ${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtDate(e.date))}</div>
+        ${e.notes?`<div class="log-note">${esc(e.notes)}</div>`:''}
+      </div>
+      <div class="log-acts">
+        <button class="log-btn rv" data-act="rv" title="${e.resolved?'Reactivate':'Resolve'}">${e.resolved?'↩':'✓'}</button>
+        <button class="log-btn" data-act="del" title="Delete">✕</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('.log-item').forEach(el=>{
+    el.querySelector('.log-body').addEventListener('click',()=>{const e=ST.entries.find(x=>x.id===el.dataset.id);if(e){closeHistory(false);editEntry(e)}});
+    el.querySelector('[data-act="rv"]').addEventListener('click',ev=>{ev.stopPropagation();const e=ST.entries.find(x=>x.id===el.dataset.id);if(e){e.resolved=!e.resolved;e.updatedAt=Date.now();save();renderLog();renderSummary();buildBody()}});
+    el.querySelector('[data-act="del"]').addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const e=ST.entries.find(x=>x.id===el.dataset.id);
+      if(!e)return;
+      openConfirm({
+        title:'Delete this entry?',
+        msg:`${e.label} — ${e.severity}/10 ${cap(e.painType)}, ${fmtDate(e.date)}. This can't be undone.`,
+        ok:'Delete',returnFocus:document.getElementById('hist-close'),
+        onOk:()=>{
+          if(ST.editId===e.id)closeForm();
+          ST.entries=ST.entries.filter(x=>x.id!==e.id);tombstone(e.id);save();renderLog();renderSummary();buildBody();toast('Entry deleted');
+        }
+      });
+    });
+  });
+}
+
+function renderSummary(){
+  const body=document.getElementById('sbody');
+  const active=ST.entries.filter(e=>!e.resolved);
+  const resolved=ST.entries.filter(e=>e.resolved);
+  if(!ST.entries.length){body.textContent='No pain entries recorded yet. Click anywhere on the 3D body above to log pain points for your next appointment.';return}
+  let t=`PAIN SUMMARY REPORT\nGenerated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n`;
+  if(ST.htFt)t+=`Patient: ${ST.htFt}'${ST.htIn||0}" / ${ST.wt||'—'} lbs${ST.age?' / Age '+ST.age:''}\n`;
+  t+='─'.repeat(44)+'\n\n';
+  if(active.length){
+    t+=`ACTIVE PAIN POINTS (${active.length})\n\n`;
+    active.sort((a,b)=>b.severity-a.severity).forEach((e,i)=>{
+      t+=`${i+1}. ${e.label} (${e.viewLabel})\n`;
+      t+=`   Severity: ${e.severity}/10 — ${cap(e.painType)}\n`;
+      if(e.duration)t+=`   Duration: ${e.duration}\n`;
+      t+=`   Recorded: ${fmtDate(e.date)}\n`;
+      if(e.notes)t+=`   Notes: ${e.notes}\n`;
+      t+='\n';
+    });
+    t+=`OVERVIEW\n  Most severe: ${Math.max(...active.map(e=>e.severity))}/10\n`;
+    t+=`  Areas affected: ${[...new Set(active.map(e=>e.label))].join(', ')}\n  Total: ${active.length}\n\n`;
+  }else t+='No active pain points.\n\n';
+  if(resolved.length){t+=`RESOLVED (${resolved.length})\n`;resolved.forEach(e=>{t+=`  · ${e.label} — was ${e.severity}/10 ${cap(e.painType)} (${fmtDate(e.date)})\n`})}
+  body.textContent=t;
+}
+
+/* ═══════════════════════════════════════════
+   ENCRYPTED SYNC — export/import between devices
+   ═══════════════════════════════════════════ */
+const PBKDF2_ITER=600000;
+// Automatic sync state (Firefox + extension + helper). `applying` marks saves caused by incoming data,
+// so they don't immediately trigger another sync.
+const auto={enabled:false,running:false,again:false,timer:null,applying:false,path:null,salt:null,state:'off',retry:null};
+function markDirty(){
+  if(auto.enabled&&!auto.applying)scheduleAutoSync(1500);
+}
+function scheduleAutoSync(ms){
+  clearTimeout(auto.timer);
+  auto.timer=setTimeout(syncNow,ms);
+}
+// Chunked: spreading a large buffer into one fromCharCode call exceeds the engine's argument limit.
+function b64(buf){
+  const bytes=new Uint8Array(buf);let s='';
+  for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+  return btoa(s);
+}
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+
+async function deriveKey(passphrase,salt,iterations=PBKDF2_ITER){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(passphrase),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey(
+    {name:'PBKDF2',salt,iterations,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']
+  );
+}
+
+// Deriving the key is deliberately slow; auto-sync reuses one file's salt, so cache keys for the session.
+const keyCache=new Map();
+async function cachedKey(passphrase,saltB64,iterations){
+  const id=iterations+'|'+saltB64,hit=keyCache.get(id);
+  if(hit&&hit.pass===passphrase)return hit.key;
+  const key=await deriveKey(passphrase,unb64(saltB64),iterations);
+  keyCache.set(id,{pass:passphrase,key});
+  return key;
+}
+
+// `saltB64` lets auto-sync keep the file's salt (cached key); a fresh IV is used for every write regardless.
+async function encryptPayload(obj,passphrase,saltB64){
+  const salt=saltB64||b64(crypto.getRandomValues(new Uint8Array(16)));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await cachedKey(passphrase,salt,PBKDF2_ITER);
+  const data=new TextEncoder().encode(JSON.stringify(obj));
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,data);
+  return JSON.stringify({v:1,salt,iv:b64(iv),kdfIterations:PBKDF2_ITER,ciphertext:b64(cipher)});
+}
+
+// Throws if the passphrase is wrong or the file is corrupt/tampered — AES-GCM refuses to decrypt in either case.
+async function decryptPayload(fileText,passphrase){
+  let env;
+  try{env=JSON.parse(fileText)}catch{throw new Error('This isn’t a Pain Tracker sync file.')}
+  if(!env||env.v!==1||!env.salt||!env.iv||!env.ciphertext)throw new Error('This isn’t a Pain Tracker sync file.');
+  // Honour the file's own iteration count (bounded) so files stay readable if the default is raised later.
+  const iter=Number.isInteger(env.kdfIterations)&&env.kdfIterations>=100000&&env.kdfIterations<=10000000?env.kdfIterations:PBKDF2_ITER;
+  const key=await cachedKey(passphrase,env.salt,iter);
+  let plain;
+  try{plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},key,unb64(env.ciphertext))}
+  catch{throw new Error('Wrong passphrase, or the file was changed or damaged.')}
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+function buildSyncPayload(){
+  return{
+    v:1,exportedAt:new Date().toISOString(),
+    entries:ST.entries,tombstones:ST.tombstones,
+    profile:{htFt:ST.htFt,htIn:ST.htIn,wt:ST.wt,age:ST.age,bodyType:currentBodyType,shape:ST.shape,profileUpdatedAt:ST.profileUpdatedAt}
+  };
+}
+
+// Sync files come from outside the app, and entry fields end up in the page's HTML — so validate
+// every field rather than trusting the file's structure. Returns null for anything unusable.
+const ID_RE=/^[\w-]{1,100}$/,DATE_RE=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const PAIN_TYPES=[...document.querySelectorAll('#ftype option')].map(o=>o.value);
+function cleanEntry(e){
+  if(!e||typeof e!=='object'||typeof e.id!=='string'||!ID_RE.test(e.id))return null;
+  const str=(v,max)=>typeof v==='string'?v.slice(0,max):'';
+  const num=v=>typeof v==='number'&&Number.isFinite(v)?v:0;
+  const vec=v=>v&&typeof v==='object'?{x:num(v.x),y:num(v.y),z:num(v.z)}:{x:0,y:0,z:0};
+  const an=e.anchor;
+  const anchorOk=an&&typeof an==='object'&&['mi','a','b','c'].every(k=>Number.isInteger(an[k])&&an[k]>=0)&&['u','v','w'].every(k=>typeof an[k]==='number'&&Number.isFinite(an[k]));
+  return{
+    id:e.id,regionId:str(e.regionId,100),label:str(e.label,120)||'Body',viewLabel:str(e.viewLabel,40),
+    point:vec(e.point),normal:vec(e.normal),
+    anchor:anchorOk?{mi:an.mi,a:an.a,b:an.b,c:an.c,u:an.u,v:an.v,w:an.w}:null,
+    bodyType:e.bodyType==='female'?'female':'male',regionVer:num(e.regionVer),
+    severity:clamp(Math.round(num(e.severity))||1,1,10),
+    painType:PAIN_TYPES.includes(e.painType)?e.painType:PAIN_TYPES[0],
+    duration:str(e.duration,200),notes:str(e.notes,2000),
+    date:typeof e.date==='string'&&DATE_RE.test(e.date)?e.date:dtp.getLocalString(),
+    resolved:e.resolved===true,updatedAt:num(e.updatedAt)||1
+  };
+}
+
+// Last-write-wins with tombstones: commutative, so it never matters which device imports from which first.
+// Everything is computed first and only committed if the whole import is valid.
+function mergeSyncPayload(incoming){
+  if(!incoming||typeof incoming!=='object'||incoming.v!==1)throw new Error('This sync file is from a newer or unknown version of the app.');
+  const incEntries=(Array.isArray(incoming.entries)?incoming.entries:[]).map(cleanEntry).filter(Boolean);
+  const incTombs=(Array.isArray(incoming.tombstones)?incoming.tombstones:[])
+    .filter(t=>t&&typeof t.id==='string'&&ID_RE.test(t.id)&&Number.isFinite(t.deletedAt));
+  const p=incoming.profile&&typeof incoming.profile==='object'?incoming.profile:null;
+
+  // One tracker = one body. Never mix two body models' entries into one history.
+  const incType=p&&(p.bodyType==='female'||p.bodyType==='male')?p.bodyType:(incEntries[0]&&incEntries[0].bodyType);
+  let bodyType=currentBodyType;
+  if(incType&&incType!==currentBodyType){
+    if(ST.entries.length&&incEntries.length){
+      const name=t=>t==='male'?'Male':'Female';
+      throw new Error(`This sync file uses the ${name(incType)} body model, but this device has entries on the ${name(currentBodyType)} model. Clear this device’s entries first, or export from here instead.`);
+    }
+    if(!ST.entries.length)bodyType=incType;
+  }
+
+  const stats={added:0,updated:0,removed:0};
+  const tomb=new Map(ST.tombstones.map(t=>[t.id,t.deletedAt]));
+  incTombs.forEach(t=>{const cur=tomb.get(t.id);if(cur===undefined||t.deletedAt>cur)tomb.set(t.id,t.deletedAt)});
+
+  const byId=new Map(ST.entries.map(e=>[e.id,e]));
+  incEntries.forEach(inc=>{
+    if(inc.bodyType!==bodyType)return;
+    const deletedAt=tomb.get(inc.id);
+    if(deletedAt!==undefined&&deletedAt>=inc.updatedAt)return;
+    const cur=byId.get(inc.id);
+    if(!cur){byId.set(inc.id,inc);stats.added++}
+    else if(inc.updatedAt>(cur.updatedAt||0)){byId.set(inc.id,inc);stats.updated++}
+  });
+  const entries=[...byId.values()].filter(e=>{
+    const deletedAt=tomb.get(e.id);
+    const gone=deletedAt!==undefined&&deletedAt>=(e.updatedAt||0);
+    if(gone)stats.removed++;
+    return!gone;
+  });
+
+  // Profile: newest edit wins; a device that has never had a profile entered takes the incoming one.
+  const localBlank=!ST.htFt&&!ST.wt&&!ST.age&&!Object.keys(ST.shape).length;
+  const incHasData=p&&(p.htFt||p.wt||p.age||(p.shape&&Object.keys(p.shape).length));
+  const takeProfile=p&&incHasData&&((Number(p.profileUpdatedAt)||0)>(ST.profileUpdatedAt||0)||localBlank);
+  stats.profile=!!takeProfile;
+  stats.bodyChanged=bodyType!==currentBodyType;
+
+  // --- commit ---
+  ST.entries=entries;
+  ST.tombstones=[...tomb.entries()].map(([id,deletedAt])=>({id,deletedAt}));
+  currentBodyType=bodyType;
+  if(takeProfile){
+    const n=(v,lo,hi)=>Number.isFinite(+v)?clamp(+v,lo,hi):0;
+    ST.htFt=n(p.htFt,0,8);ST.htIn=n(p.htIn,0,11);ST.wt=n(p.wt,0,5000);ST.age=n(p.age,0,130);
+    ST.profileUpdatedAt=Number(p.profileUpdatedAt)||0;
+    ST.shape={};
+    if(p.shape&&typeof p.shape==='object')SHAPE_PARTS.forEach(sp=>{const v=+p.shape[sp.id];if(v)ST.shape[sp.id]=clamp(v,-1,1)});
+  }
+  ['ht-ft','ht-in','wt','age'].forEach((id,i)=>{document.getElementById(id).value=[ST.htFt,ST.htIn,ST.wt,ST.age][i]||''});
+  syncShapeUI();refreshBmiHint();
+  save();saveTombstones();persistProfile();
+  return stats;
+}
+
+/* --- Remembering the passphrase on this device ---
+   The passphrase is wrapped with a non-extractable AES-GCM key kept in IndexedDB, so it never sits in
+   storage as readable text. Limits: any script on this same origin can still *use* that key, and the
+   browser persists it in the profile. This is convenience, not a vault — and entries are already stored
+   unencrypted in localStorage on the device. The sync encryption protects the copy in the cloud drive. */
+const SYNC_DB='bpt_sync',SYNC_STORE='kv';
+function syncDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(SYNC_DB,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(SYNC_STORE);
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function idbGet(key){
+  const db=await syncDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(SYNC_STORE,'readonly').objectStore(SYNC_STORE).get(key);
+    tx.onsuccess=()=>res(tx.result);tx.onerror=()=>rej(tx.error);
+  });
+}
+async function idbSet(key,val){
+  const db=await syncDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(SYNC_STORE,'readwrite').objectStore(SYNC_STORE).put(val,key);
+    tx.onsuccess=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+async function idbDel(key){
+  const db=await syncDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(SYNC_STORE,'readwrite').objectStore(SYNC_STORE).delete(key);
+    tx.onsuccess=()=>res();tx.onerror=()=>rej(tx.error);
+  });
+}
+
+async function rememberPassphrase(passphrase){
+  try{
+    const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const wrapped=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(passphrase));
+    await idbSet('wrapKey',key);
+    await idbSet('wrapped',{iv,data:wrapped});
+  }catch{/* storing a CryptoKey in IndexedDB isn't supported here — passphrase just won't be remembered */}
+}
+async function recallPassphrase(){
+  try{
+    const key=await idbGet('wrapKey'),box=await idbGet('wrapped');
+    if(!key||!box)return null;
+    const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:box.iv},key,box.data);
+    return new TextDecoder().decode(plain);
+  }catch{return null}
+}
+async function forgetPassphrase(){await idbDel('wrapKey');await idbDel('wrapped')}
+/* ═══════════════════════════════════════════
+   PARAM UI & MEASUREMENTS
+   ═══════════════════════════════════════════ */
+let measureDebounce=null;
+function refreshBmiHint(){
+  const hint=document.getElementById('bmi-hint');
+  const inches=ST.htFt*12+(ST.htIn||0);
+  if(ST.htFt&&ST.wt&&inches>0){
+    const bmiVal=(ST.wt/(inches*inches))*703;
+    const cat=bmiVal<18.5?'Underweight':bmiVal<25?'Normal':bmiVal<30?'Overweight':'Obese';
+    hint.textContent=`BMI: ${bmiVal.toFixed(1)} (${cat})`+(ST.wt>1000?' · model shape shown at 1000 lbs max':'');
+  }else{
+    hint.textContent='Enter your measurements for the doctor summary. Use the toggle above to switch body model.';
+  }
+}
+function applyMeasurements(){
+  ST.htFt=+document.getElementById('ht-ft').value||0;
+  ST.htIn=+document.getElementById('ht-in').value||0;
+  ST.wt=+document.getElementById('wt').value||0;
+  ST.age=+document.getElementById('age').value||0;
+  refreshBmiHint();
+  saveProfile();
+  clearTimeout(measureDebounce);
+  measureDebounce=setTimeout(()=>buildBody(),300);
+}
+
+/* ═══════════════════════════════════════════
+   EVENT WIRING & INIT
+   ═══════════════════════════════════════════ */
+document.getElementById('vtabs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-v]');if(!b)return;
+  document.querySelectorAll('#vtabs [data-v]').forEach(x=>x.classList.toggle('on',x===b));
+  animToView(b.dataset.v);
+});
+['ht-ft','ht-in','wt','age'].forEach(id=>document.getElementById(id).addEventListener('input',applyMeasurements));
+document.getElementById('fsev').addEventListener('input',e=>updateSev(e.target.value));
+document.getElementById('fclose').addEventListener('click',closeForm);
+document.getElementById('fcancel').addEventListener('click',closeForm);
+document.getElementById('fsave').addEventListener('click',saveEntry);
+document.getElementById('pfilt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.filter=b.dataset.f;document.querySelectorAll('#pfilt button').forEach(x=>x.classList.toggle('on',x===b));renderLog()});
+const LOCK_SVG='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+function updateBodyToggle(){
+  const btn=document.getElementById('body-toggle');
+  const label=currentBodyType==='male'?'Male':'Female';
+  const locked=ST.entries.length>0;
+  btn.classList.toggle('locked',locked);
+  btn.innerHTML=(locked?LOCK_SVG:'')+label;
+  btn.title=locked?'Body type is locked while entries exist. Click to clear entries and switch.':'Switch body model';
+}
+function switchBodyType(){
+  currentBodyType=currentBodyType==='male'?'female':'male';
+  closeForm();saveProfile();buildBody();updateBodyToggle();
+}
+// In-page confirm (the page can't rely on window.confirm). Cancel gets focus so Enter is the safe choice.
+let confirmAction=null,confirmReturn=null;
+function openConfirm({title,msg,ok,onOk,returnFocus}){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-ok').textContent=ok;
+  confirmAction=onOk;confirmReturn=returnFocus||null;
+  document.getElementById('confirm-overlay').hidden=false;
+  document.getElementById('confirm-cancel').focus();
+}
+function closeConfirm(){
+  document.getElementById('confirm-overlay').hidden=true;
+  confirmAction=null;
+  if(confirmReturn&&document.contains(confirmReturn))confirmReturn.focus();
+}
+document.getElementById('confirm-cancel').addEventListener('click',closeConfirm);
+document.getElementById('confirm-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeConfirm()});
+document.getElementById('confirm-ok').addEventListener('click',()=>{const a=confirmAction;closeConfirm();if(a)a()});
+function entryCount(n){return `${n} pain ${n===1?'entry':'entries'}`}
+document.getElementById('body-toggle').addEventListener('click',()=>{
+  if(!ST.entries.length){switchBodyType();return}
+  const other=currentBodyType==='male'?'Female':'Male',n=ST.entries.length;
+  openConfirm({
+    title:'Switch body type?',
+    msg:`Your ${entryCount(n)} ${n===1?'was':'were'} logged on this body. Switching to ${other} will permanently clear ${n===1?'it':'all of them'}. Copy your Summary for Doctor first if you need it.`,
+    ok:'Clear & switch',returnFocus:document.getElementById('body-toggle'),
+    onOk:()=>{tombstone(ST.entries.map(e=>e.id));ST.entries=[];save();switchBodyType();renderLog();renderSummary();toast('Entries cleared · switched to '+other)}
+  });
+});
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  if(!ST.entries.length){toast('Nothing to clear');return}
+  openConfirm({
+    title:'Clear all entries?',
+    msg:`This permanently deletes all ${entryCount(ST.entries.length)}. Copy your Summary for Doctor first if you need it.`,
+    ok:'Delete all',returnFocus:document.getElementById('clear-btn'),
+    onOk:()=>{tombstone(ST.entries.map(e=>e.id));ST.entries=[];save();closeForm();buildBody();renderLog();renderSummary();toast('All entries cleared')}
+  });
+});
+function fmtPct(v){const p=Math.round(v*100);return p>0?'+'+p+'%':p<0?'−'+Math.abs(p)+'%':'0%'}
+let shapeDebounce=null;
+function syncShapeUI(){
+  SHAPE_PARTS.forEach(p=>{
+    const v=ST.shape[p.id]||0,el=document.getElementById('sh-'+p.id);
+    el.value=Math.round(v*100);
+    el.setAttribute('aria-valuetext',fmtPct(v));
+    document.getElementById('sh-'+p.id+'-v').textContent=fmtPct(v);
+  });
+  const c=Object.keys(ST.shape).length,badge=document.getElementById('shape-count');
+  badge.hidden=!c;
+  badge.textContent=c+' adjusted';
+}
+function setShape(id,v){
+  if(v)ST.shape[id]=v;else delete ST.shape[id];
+  syncShapeUI();saveProfile();
+  clearTimeout(shapeDebounce);
+  shapeDebounce=setTimeout(buildBody,120);
+}
+document.getElementById('shape-grid').innerHTML=SHAPE_PARTS.map(p=>`
+  <div class="param">
+    <label for="sh-${p.id}">${p.label}<span id="sh-${p.id}-v">0%</span></label>
+    <input type="range" id="sh-${p.id}" min="-100" max="100" step="5" value="0">
+    <div class="param-scale" aria-hidden="true"><span>Slimmer</span><span>Fuller</span></div>
+  </div>`).join('');
+SHAPE_PARTS.forEach(p=>{
+  const el=document.getElementById('sh-'+p.id);
+  el.addEventListener('input',()=>setShape(p.id,+el.value/100));
+  el.addEventListener('dblclick',()=>setShape(p.id,0));
+});
+document.getElementById('shape-toggle').addEventListener('click',()=>{
+  const btn=document.getElementById('shape-toggle'),panel=document.getElementById('shape-panel');
+  panel.hidden=!panel.hidden;
+  btn.setAttribute('aria-expanded',String(!panel.hidden));
+});
+document.getElementById('shape-reset').addEventListener('click',()=>{
+  if(!Object.keys(ST.shape).length)return;
+  ST.shape={};syncShapeUI();saveProfile();buildBody();
+});
+document.getElementById('summ-toggle').addEventListener('click',()=>{
+  const btn=document.getElementById('summ-toggle'),body=document.getElementById('sbody');
+  const open=body.hidden;
+  body.hidden=!open;
+  btn.setAttribute('aria-expanded',String(open));
+});
+document.getElementById('copybtn').addEventListener('click',()=>{
+  const body=document.getElementById('sbody');
+  // If the clipboard is refused, open the summary and select it so Ctrl+C still works.
+  const fallback=()=>{
+    body.hidden=false;
+    document.getElementById('summ-toggle').setAttribute('aria-expanded','true');
+    const range=document.createRange();range.selectNodeContents(body);
+    const sel=getSelection();sel.removeAllRanges();sel.addRange(range);
+    toast('Summary selected — press Ctrl+C to copy');
+  };
+  try{navigator.clipboard.writeText(body.textContent).then(()=>toast('Summary copied'),fallback)}catch{fallback()}
+});
+document.getElementById('markers-toggle').addEventListener('click',()=>{
+  showMarkers=!showMarkers;
+  const btn=document.getElementById('markers-toggle');
+  btn.classList.toggle('on',showMarkers);
+  btn.setAttribute('aria-pressed',String(showMarkers));
+  if(showMarkers&&!ST.editId&&ST.clickPt)closeForm();
+  document.getElementById('zhint').textContent=showMarkers?HINT_MARKERS:HINT_NEW;
+  renderMarkers3D();
+});
+function openHistory(){document.getElementById('hist-overlay').hidden=false;document.getElementById('hist-close').focus()}
+function closeHistory(refocus=true){
+  document.getElementById('hist-overlay').hidden=true;
+  if(refocus)document.getElementById('hist-btn').focus();
+}
+document.getElementById('hist-btn').addEventListener('click',openHistory);
+document.getElementById('hist-close').addEventListener('click',()=>closeHistory());
+document.getElementById('hist-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeHistory()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(!document.getElementById('pass-overlay').hidden)closePass(null);
+  else if(!document.getElementById('confirm-overlay').hidden)closeConfirm();
+  else if(!document.getElementById('hist-overlay').hidden)closeHistory();
+});
+
+/* --- Sync panel --- */
+const SYNC_FILE='pain-tracker-sync.txt';
+const $s=id=>document.getElementById(id);
+let pendingShareFile=null,passResolve=null,passValidate=null;
+
+function syncMeta(){try{return JSON.parse(localStorage.getItem('bpt_sync_meta'))||{}}catch{return{}}}
+function setSyncMeta(patch){try{localStorage.setItem('bpt_sync_meta',JSON.stringify({...syncMeta(),...patch}))}catch{}refreshSyncUI()}
+function fmtShort(t){return t?new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'never'}
+function syncMsg(text,kind){const el=$s('sync-msg');el.textContent=text||'';el.className='sync-msg'+(kind?' '+kind:'')}
+async function refreshSyncUI(){
+  const m=syncMeta(),last=Math.max(m.lastExport||0,m.lastImport||0,m.lastAuto||0);
+  $s('sync-status').textContent=auto.enabled&&auto.state==='on'?'Auto-sync on · '+fmtShort(m.lastAuto)
+    :last?'Last synced '+fmtShort(last):'Not synced yet';
+  $s('sync-meta').textContent=`Last export: ${fmtShort(m.lastExport)} · Last import: ${fmtShort(m.lastImport)}`;
+  $s('sync-forget').hidden=!(await recallPassphrase());
+}
+function setSyncBusy(label,btnId='sync-export'){
+  document.querySelector('.sync-actions').classList.toggle('sync-busy',!!label);
+  const b=$s(btnId);
+  if(label){b.dataset.label=b.textContent;b.textContent=label}
+  else if(b.dataset.label){b.textContent=b.dataset.label;delete b.dataset.label}
+}
+function resetExportBtn(){const b=$s('sync-export');b.textContent='Export sync file';b.classList.remove('attention')}
+
+// Passphrase dialog. `validate` (optional) runs on submit and keeps the dialog open with an error if it fails.
+// forceRemember: auto-sync runs in the background, so it needs the passphrase kept on this device.
+function askPassphrase({title,msg,confirm,validate,forceRemember}){
+  $s('pass-title').textContent=title;$s('pass-msg').textContent=msg;
+  $s('pass-remember-wrap').hidden=!!forceRemember;
+  if(forceRemember)$s('pass-remember').checked=true;
+  $s('pass-2-wrap').hidden=!confirm;
+  $s('pass-1').value='';$s('pass-2').value='';$s('pass-err').textContent='';
+  $s('pass-show').checked=false;$s('pass-1').type=$s('pass-2').type='password';
+  $s('pass-1').autocomplete=confirm?'new-password':'current-password';
+  $s('pass-form').dataset.confirm=confirm?'1':'';
+  $s('pass-ok').disabled=false;$s('pass-ok').textContent='Continue';
+  passValidate=validate||null;
+  $s('pass-overlay').hidden=false;$s('pass-1').focus();
+  return new Promise(res=>{passResolve=res});
+}
+function closePass(result){
+  $s('pass-overlay').hidden=true;
+  const r=passResolve;passResolve=null;passValidate=null;
+  if(r)r(result);
+}
+$s('pass-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const p1=$s('pass-1').value,confirm=!!$s('pass-form').dataset.confirm,err=$s('pass-err');
+  if(!p1){err.textContent='Enter your passphrase.';return}
+  if(confirm&&p1.length<10){err.textContent='Use at least 10 characters — a few random words works well.';return}
+  if(confirm&&p1!==$s('pass-2').value){err.textContent='The two passphrases don’t match.';return}
+  if(passValidate){
+    $s('pass-ok').disabled=true;$s('pass-ok').textContent='Checking…';
+    const problem=await passValidate(p1);
+    $s('pass-ok').disabled=false;$s('pass-ok').textContent='Continue';
+    if(problem){err.textContent=problem;$s('pass-1').select();return}
+  }
+  closePass({pass:p1,remember:$s('pass-remember').checked});
+});
+$s('pass-cancel').addEventListener('click',()=>closePass(null));
+$s('pass-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closePass(null)});
+$s('pass-show').addEventListener('change',()=>{const t=$s('pass-show').checked?'text':'password';$s('pass-1').type=$s('pass-2').type=t});
+
+// Phones: native share sheet ("Save to Files" / Drive / AirDrop). Computers: a normal download.
+// Returns true if the file actually went somewhere.
+async function shareOrDownload(file){
+  const touch=matchMedia('(pointer:coarse)').matches;
+  if(touch&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'Pain Tracker sync file'});toast('Saved — keep it in your drive');return true}
+    catch(e){
+      if(e.name==='AbortError')return false;
+      // Deriving the key can outlast the browser's "recent tap" window — ask for one more tap.
+      if(e.name==='NotAllowedError'){
+        pendingShareFile=file;
+        const b=$s('sync-export');b.textContent='Tap to save the file';b.classList.add('attention');
+        syncMsg('Your file is ready. Tap “Tap to save the file” to choose where to save it.','ok');
+        return false;
+      }
+    }
+  }
+  const url=URL.createObjectURL(file),a=document.createElement('a');
+  a.href=url;a.download=SYNC_FILE;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  toast('Sync file downloaded — move it into your drive folder');
+  return true;
+}
+
+async function doExport(){
+  syncMsg('');
+  if(pendingShareFile){
+    const f=pendingShareFile;pendingShareFile=null;resetExportBtn();
+    if(await shareOrDownload(f))setSyncMeta({lastExport:Date.now()});
+    return;
+  }
+  let pass=await recallPassphrase(),remember=false;
+  if(!pass){
+    const r=await askPassphrase({title:'Set a sync passphrase',confirm:true,
+      msg:'This encrypts your sync file. Use the same passphrase on your other devices. It can’t be recovered if you forget it — keep it somewhere safe.'});
+    if(!r)return;
+    pass=r.pass;remember=r.remember;
+  }
+  setSyncBusy('Encrypting…');
+  try{
+    const text=await encryptPayload(buildSyncPayload(),pass);
+    if(remember)await rememberPassphrase(pass);
+    setSyncBusy(null);resetExportBtn();
+    if(await shareOrDownload(new File([text],SYNC_FILE,{type:'text/plain'})))setSyncMeta({lastExport:Date.now()});
+  }catch(e){setSyncBusy(null);syncMsg('Export failed: '+e.message,'err')}
+  refreshSyncUI();
+}
+
+async function doImport(file){
+  syncMsg('');
+  if(!file)return;
+  if(file.size>20*1024*1024){syncMsg('That file is too large to be a sync file.','err');return}
+  const text=await file.text();
+  let payload=null,pass=await recallPassphrase(),remember=false;
+  if(pass){
+    setSyncBusy('Decrypting…','sync-import');
+    try{payload=await decryptPayload(text,pass)}
+    catch(e){if(/isn’t a Pain Tracker/.test(e.message)){setSyncBusy(null,'sync-import');syncMsg(e.message,'err');return}}
+    setSyncBusy(null,'sync-import');
+  }
+  if(!payload){
+    try{JSON.parse(text)}catch{syncMsg('This isn’t a Pain Tracker sync file.','err');return}
+    const r=await askPassphrase({title:'Enter sync passphrase',confirm:false,
+      msg:pass?'Your saved passphrase didn’t open this file. Enter the passphrase it was created with.':'Enter the passphrase this sync file was created with.',
+      validate:async p=>{try{payload=await decryptPayload(text,p);return null}catch(e){return e.message}}});
+    if(!r)return;
+    pass=r.pass;remember=r.remember;
+  }
+  let stats;
+  try{closeForm();stats=mergeSyncPayload(payload)}
+  catch(e){syncMsg(e.message,'err');return}
+  if(remember)await rememberPassphrase(pass);
+  setSyncMeta({lastImport:Date.now()});
+  renderLog();renderSummary();buildBody();
+  const changed=stats.added+stats.updated+stats.removed;
+  toast(changed?`Imported: ${stats.added} new, ${stats.updated} updated, ${stats.removed} removed`:'Already up to date');
+  syncMsg(changed?'Now export to save the combined entries back to your drive.':'This device already had everything in that file.','ok');
+  if(changed)$s('sync-export').classList.add('attention');
+}
+
+$s('sync-toggle').addEventListener('click',()=>{
+  const open=$s('sync-body').hidden;
+  $s('sync-body').hidden=!open;$s('sync-toggle').setAttribute('aria-expanded',String(open));
+});
+$s('sync-export').addEventListener('click',doExport);
+$s('sync-import').addEventListener('click',()=>{const f=$s('sync-file');f.value='';f.click()});
+$s('sync-file').addEventListener('change',()=>doImport($s('sync-file').files[0]));
+$s('sync-forget').addEventListener('click',async()=>{
+  await forgetPassphrase();keyCache.clear();refreshSyncUI();toast('Passphrase forgotten on this device');
+  if(ext.present)refreshAutoSync();
+});
+
+/* --- Automatic sync (Firefox extension + local helper) --- */
+const EXT_TARGET=location.origin==='null'?'*':location.origin;
+const ext={present:false,rid:0,pending:new Map()};
+
+function extRequest(type,data){
+  return new Promise((resolve,reject)=>{
+    const rid=++ext.rid;
+    const t=setTimeout(()=>{ext.pending.delete(rid);reject(new Error('The sync extension didn’t answer.'))},type==='choosePath'?600000:45000);
+    ext.pending.set(rid,{resolve,t});
+    window.postMessage({channel:'pts-page',rid,type,...data},EXT_TARGET);
+  });
+}
+window.addEventListener('message',e=>{
+  if(e.source!==window||!e.data||e.data.channel!=='pts-ext')return;
+  const d=e.data;
+  if(d.hello){if(!ext.present){ext.present=true;$s('sync-auto').hidden=false;refreshAutoSync()}return}
+  if(d.push){
+    if(d.type==='changed'&&auto.enabled)scheduleAutoSync(200);
+    else if(d.type==='linked')refreshAutoSync();
+    else if(d.type==='helperDown'&&auto.enabled){setAutoUI('err','The sync helper stopped — trying again shortly.',null);scheduleAutoSync(10000)}
+    return;
+  }
+  const p=ext.pending.get(d.rid);
+  if(p){clearTimeout(p.t);ext.pending.delete(d.rid);p.resolve(d.reply||{})}
+});
+
+function helperError(res){
+  if(res.detail)return /No such native application/i.test(res.detail)
+    ?'The sync helper isn’t installed on this computer (see sync-helper in the Pain Tracker folder).':res.detail;
+  return{noPath:'No sync file is linked yet.',invalid:'The helper refused to save that content.',notAllowed:'That action isn’t allowed from this page.'}[res.error]||res.error||'Something went wrong talking to the sync helper.';
+}
+function describePath(p){return p?p.split(/[\\/]/).slice(-2).join('/'):''}
+
+function setAutoUI(dot,text,action){
+  auto.state=dot;
+  $s('sync-dot').className='sync-dot'+(dot?' '+dot:'');
+  $s('sync-auto-text').textContent=text;
+  const a=$s('auto-action');
+  a.hidden=!action;
+  if(action){a.textContent=action.label;a.onclick=action.fn}
+  $s('auto-now').hidden=!auto.enabled||dot==='busy';
+  $s('auto-change').hidden=!auto.path||dot==='busy';
+  refreshSyncUI();
+}
+
+// Order-independent snapshot of what a sync file holds, so identical data is never re-uploaded.
+function stableJson(v){
+  if(Array.isArray(v))return '['+v.map(stableJson).join(',')+']';
+  if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stableJson(v[k])).join(',')+'}';
+  return JSON.stringify(v===undefined?null:v);
+}
+function syncFingerprint(p){
+  const byId=(a,b)=>a.id<b.id?-1:a.id>b.id?1:0;
+  const entries=(Array.isArray(p.entries)?p.entries:[]).map(cleanEntry).filter(Boolean).sort(byId);
+  const tombs=(Array.isArray(p.tombstones)?p.tombstones:[]).map(t=>({id:t.id,deletedAt:t.deletedAt})).sort(byId);
+  const pr=p.profile||{};
+  return stableJson({entries,tombs,profile:{htFt:+pr.htFt||0,htIn:+pr.htIn||0,wt:+pr.wt||0,age:+pr.age||0,bodyType:pr.bodyType||'male',shape:pr.shape||{},t:+pr.profileUpdatedAt||0}});
+}
+
+function applyRemote(payload){
+  auto.applying=true;
+  try{return mergeSyncPayload(payload)}
+  finally{auto.applying=false}
+}
+function afterRemoteChange(){
+  if(ST.editId&&!ST.entries.some(e=>e.id===ST.editId))closeForm();
+  renderLog();renderSummary();buildBody();
+}
+
+async function refreshAutoSync(){
+  if(!ext.present)return;
+  clearTimeout(auto.retry);
+  setAutoUI('busy','Checking automatic sync…',null);
+  let st;
+  try{st=await extRequest('status')}
+  catch(e){auto.enabled=false;return setAutoUI('err','The sync extension isn’t responding. Reload the page to try again.',null)}
+  if(!st.ok){auto.enabled=false;auto.path=null;return setAutoUI('err',helperError(st),{label:'Check again',fn:refreshAutoSync})}
+  auto.path=st.path||null;
+  if(!auto.path){
+    auto.enabled=false;
+    return setAutoUI('','Automatic sync is available in this browser. Choose where your sync file lives — a folder your cloud drive syncs.',{label:'Choose sync file',fn:chooseSyncFile});
+  }
+  if(!(await recallPassphrase())){
+    auto.enabled=false;
+    return setAutoUI('',`Linked to ${describePath(auto.path)}. Enter your sync passphrase once to start syncing automatically.`,{label:'Turn on automatic sync',fn:enableAutoSync});
+  }
+  auto.enabled=true;
+  syncNow();
+}
+
+async function chooseSyncFile(){
+  setAutoUI('busy','A file window has opened — it may be behind this browser window.',null);
+  const r=await extRequest('choosePath').catch(e=>({ok:false,detail:e.message}));
+  if(r.ok&&r.path){auto.salt=null;syncMsg('')}
+  else if(!(r.ok&&r.cancelled))syncMsg(helperError(r),'err');
+  refreshAutoSync();
+}
+
+async function enableAutoSync(){
+  let first;
+  try{first=await extRequest('read')}catch(e){return setAutoUI('err',e.message,{label:'Check again',fn:refreshAutoSync})}
+  if(!first.ok)return setAutoUI('err',helperError(first),{label:'Check again',fn:refreshAutoSync});
+  const kept='It’s kept on this device so syncing can happen in the background.';
+  const r=await askPassphrase(first.exists&&first.content
+    ?{title:'Enter your sync passphrase',confirm:false,forceRemember:true,
+      msg:'Enter the passphrase this sync file was created with. '+kept,
+      validate:async p=>{try{await decryptPayload(first.content,p);return null}catch(e){return e.message}}}
+    :{title:'Set a sync passphrase',confirm:true,forceRemember:true,
+      msg:'This encrypts your sync file. Use the same passphrase on your other devices — it can’t be recovered if you forget it. '+kept});
+  if(!r)return;
+  await rememberPassphrase(r.pass);
+  if(!(await recallPassphrase())){
+    return setAutoUI('err','This browser couldn’t store the passphrase, so automatic sync can’t run here. Use Export / Import instead.',null);
+  }
+  refreshAutoSync();
+}
+
+async function syncNow(){
+  clearTimeout(auto.timer);
+  if(!auto.enabled||!ext.present)return;
+  if(auto.running){auto.again=true;return}
+  auto.running=true;
+  setAutoUI('busy','Syncing…',null);
+  try{
+    const pass=await recallPassphrase();
+    if(!pass){auto.enabled=false;refreshAutoSync();return}
+    let done=false;
+    for(let attempt=0;attempt<4&&!done;attempt++){
+      const r=await extRequest('read');
+      if(!r.ok)throw new Error(helperError(r));
+      let changed=false,remoteFp=null,salt=null;
+      if(r.exists&&r.content){
+        let payload;
+        try{payload=await decryptPayload(r.content,pass)}
+        catch(e){
+          auto.enabled=false;
+          setAutoUI('err','Your saved passphrase doesn’t open the linked sync file. Enter the passphrase that file was created with.',
+            {label:'Enter passphrase',fn:async()=>{await forgetPassphrase();keyCache.clear();enableAutoSync()}});
+          return;
+        }
+        try{salt=JSON.parse(r.content).salt}catch{}
+        const s=applyRemote(payload);
+        if(s.added||s.updated||s.removed||s.profile||s.bodyChanged)changed=true;
+        remoteFp=syncFingerprint(payload);
+      }
+      // Copies the drive made when two devices saved at once: merge them, then move them aside.
+      const merged=[];
+      for(const c of r.conflicts||[]){
+        try{
+          const s=applyRemote(await decryptPayload(c.content,pass));
+          if(s.added||s.updated||s.removed||s.profile)changed=true;
+          merged.push({name:c.name,hash:c.hash});
+        }catch(e){/* made with another passphrase or body model — leave it where it is */}
+      }
+      if(changed)afterRemoteChange();
+      if(!r.exists||syncFingerprint(buildSyncPayload())!==remoteFp||merged.length){
+        const text=await encryptPayload(buildSyncPayload(),pass,salt||auto.salt||undefined);
+        auto.salt=JSON.parse(text).salt;
+        const w=await extRequest('write',{content:text,expectHash:r.exists?r.hash:null});
+        if(!w.ok){if(w.error==='changed')continue;throw new Error(helperError(w))}
+      }
+      if(merged.length)await extRequest('archiveConflicts',{conflicts:merged});
+      done=true;
+    }
+    if(!done)throw new Error('The sync file kept changing while saving.');
+    setSyncMeta({lastAuto:Date.now()});
+    setAutoUI('on',`Automatic sync is on · ${describePath(auto.path)}`,null);
+  }catch(e){
+    auto.enabled=false;
+    const bodyClash=/body model/.test(e.message);
+    setAutoUI('err',e.message+(bodyClash?'':' Trying again shortly.'),{label:'Try again',fn:refreshAutoSync});
+    if(!bodyClash)auto.retry=setTimeout(refreshAutoSync,30000);
+  }finally{
+    auto.running=false;
+    if(auto.again){auto.again=false;scheduleAutoSync(300)}
+  }
+}
+
+$s('auto-now').addEventListener('click',()=>syncNow());
+$s('auto-change').addEventListener('click',chooseSyncFile);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&auto.enabled)scheduleAutoSync(500)});
+// INIT
+loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();refreshSyncUI();
+if(ST.entries.some(e=>!e.bodyType)){ST.entries.forEach(e=>{if(!e.bodyType)e.bodyType=currentBodyType});save()}
+initScene();
+buildBody();
+updateCamera();
+renderLog();renderSummary();
+animate();
+// Ask the sync extension (if installed) to say hello; its content script may attach a moment later.
+window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET);
+setTimeout(()=>{if(!ext.present)window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET)},1000);
+</script>
