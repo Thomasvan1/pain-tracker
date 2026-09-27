@@ -67,6 +67,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .pf label{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .pf input{width:100%;padding:8px 10px;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;min-height:38px;transition:box-shadow .3s var(--ease)}
 .pf input:focus{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
+.pf input::placeholder{color:var(--text-muted);opacity:.6;font-style:italic;font-weight:400}
 .prof-hint{font-size:.68rem;color:var(--text-muted);margin-top:8px;font-style:italic;grid-column:1/-1}
 .params-toggle{font-size:.72rem;color:var(--accent);cursor:pointer;border:none;background:none;font-family:inherit;font-weight:600;padding:4px 0;margin-top:6px;grid-column:1/-1;text-align:left}
 .params-toggle:hover{text-decoration:underline}
@@ -98,8 +99,28 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .fg select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237A9BAA' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 .fg textarea{resize:vertical;min-height:64px}
 .fg input[readonly]{opacity:.7;cursor:default}
+.ftype-def{font-size:.78rem;line-height:1.5;color:var(--text-sec);margin-top:7px;max-width:62ch}
+.ftype-more{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:2px}
+.ftype-more[aria-expanded="true"] .summ-chev{transform:rotate(90deg);color:var(--accent)}
+.ftype-guide:not([hidden]){display:flex;flex-direction:column;gap:4px;margin-top:6px;max-height:320px;overflow-y:auto;padding:4px;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in)}
+.ftype-opt{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;padding:9px 12px;border:none;border-radius:calc(var(--radius) - 2px);background:none;color:var(--text);font-family:inherit;cursor:pointer;transition:background .25s var(--ease)}
+.ftype-opt:hover,.ftype-opt:focus-visible{background:var(--surface);outline:none}
+.ftype-opt:focus-visible{box-shadow:0 0 0 2px var(--accent-glow)}
+.ftype-opt[aria-pressed="true"]{background:var(--accent-lt)}
+.ftype-opt b{font-size:.82rem;font-weight:600}
+.ftype-opt[aria-pressed="true"] b{color:var(--accent)}
+.ftype-opt span{font-size:.74rem;line-height:1.45;color:var(--text-sec)}
+.ftype-opt i{font-size:.7rem;font-style:italic;color:var(--text-muted)}
 /* Date/time picker — same structure and behaviour as Life Line's timestamp picker */
-.dtp-root{position:relative}
+.dtp-root{position:relative;margin-top:8px}
+.when-sum{font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:8px;font-variant-numeric:tabular-nums}
+.when-sum small{font-weight:500;color:var(--text-muted);font-size:.74rem}
+.when-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.when-chip{font-size:.74rem;padding:6px 13px;border:none;border-radius:20px;background:var(--card);box-shadow:var(--neu-in);color:var(--text-sec);cursor:pointer;font-family:inherit;font-weight:500;min-height:34px;transition:background .25s var(--ease),color .25s var(--ease)}
+.when-chip:hover:not(:disabled):not([aria-pressed="true"]){color:var(--text)}
+.when-chip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.when-chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);box-shadow:var(--neu-soft)}
+.when-chip:disabled{opacity:.35;cursor:not-allowed}
 .dtp-trigger{display:flex;align-items:stretch;width:100%;padding:0;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);cursor:pointer;overflow:hidden;min-height:44px;font-family:inherit;transition:box-shadow .3s var(--ease)}
 .dtp-trigger:hover,.dtp-trigger[aria-expanded="true"]{box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
 .dtp-trigger:focus-visible{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent)}
@@ -170,6 +191,33 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .log-body{flex:1;min-width:0}
 .log-loc{font-weight:600;font-size:.84rem}
 .log-meta{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+.log-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:20px;background:var(--accent-lt);color:var(--accent);font-size:.62rem;font-weight:600;letter-spacing:.03em;vertical-align:1px}
+.route-nudge{font-size:.74rem;color:var(--accent);margin-top:4px}
+.fg>.route-switch{display:flex;align-items:center;gap:10px;min-height:40px;margin:0;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text-sec);text-transform:none;letter-spacing:0}
+.route-switch input{width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
+.route-panel:not([hidden]){display:flex;flex-direction:column;gap:8px;margin-top:8px;padding:12px;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in)}
+.route-panel .when-row{margin-bottom:0}
+.route-sum{font-size:.8rem;line-height:1.5;color:var(--text);font-weight:500}
+.route-sum.empty{color:var(--text-muted);font-weight:400;font-style:italic}
+.route-acts{display:flex;flex-wrap:wrap;gap:6px}
+.route-btn{padding:6px 14px;font-size:.76rem;min-height:36px}
+.route-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.route-btn.on{background:var(--accent);color:var(--on-accent)}
+.pick-menu:not([hidden]){position:absolute;z-index:6;width:min(270px,calc(100% - 24px));max-height:calc(100% - 24px);overflow-y:auto;padding:8px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--neu-up),0 12px 32px rgba(0,0,0,.22);cursor:default}
+.pick-title{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:4px 6px 6px}
+.pick-list{display:flex;flex-direction:column;gap:2px}
+.pick-row{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:9px 8px;border:none;border-radius:10px;background:none;color:var(--text);font-family:inherit;cursor:pointer;min-height:44px}
+.pick-row:hover,.pick-row:focus-visible{background:var(--card);outline:none}
+.pick-row:focus-visible{box-shadow:0 0 0 2px var(--accent-glow)}
+.pick-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.pick-row b{display:block;font-size:.8rem;font-weight:600}
+.pick-row small{display:block;font-size:.7rem;color:var(--text-muted);margin-top:1px}
+.trace-bar:not([hidden]){position:absolute;left:12px;right:12px;bottom:12px;z-index:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:40px;background:var(--surface);box-shadow:var(--neu-up),0 6px 18px rgba(0,0,0,.18);cursor:default}
+.trace-msg{flex:1;min-width:0;font-size:.78rem;font-weight:500;color:var(--text)}
+.trace-btn{padding:8px 16px;border:none;border-radius:40px;background:var(--card);box-shadow:var(--neu-soft);color:var(--text-sec);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;min-height:40px}
+.trace-btn.done{background:var(--accent);color:var(--on-accent)}
+.trace-btn:disabled{opacity:.4;cursor:not-allowed}
+.trace-btn:focus-visible,.route-switch input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .log-note{font-size:.78rem;color:var(--text-sec);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .log-acts{display:flex;gap:4px;flex-shrink:0}
 .log-btn{background:var(--card);border:none;color:var(--text-muted);cursor:pointer;padding:0;width:28px;height:28px;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;box-shadow:var(--neu-soft);transition:all .3s var(--ease)}
@@ -200,7 +248,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .sync-msg.err{color:var(--red)}
 .sync-msg.ok{color:var(--accent)}
 .pass-msg{font-size:.84rem;color:var(--text-sec);line-height:1.6;margin-bottom:14px}
-.pass-check{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-sec);margin-bottom:8px;cursor:pointer;min-height:32px}
+.pass-check:not([hidden]){display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-sec);margin-bottom:8px;cursor:pointer;min-height:32px}
 .pass-check input{width:18px;height:18px;accent-color:var(--accent)}
 .pass-err{font-size:.8rem;color:var(--red);min-height:1.2em;margin-top:4px}
 .credits{font-size:.7rem;line-height:1.6;color:var(--text-muted);text-align:center;max-width:72ch;margin:0 auto;padding-block:4px 32px;text-wrap:balance}
@@ -244,10 +292,10 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 <section class="profile neu">
   <h3>Body Parameters</h3>
   <div class="param-row">
-    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" id="ht-ft" placeholder="5" min="3" max="8"></div>
-    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" id="ht-in" placeholder="10" min="0" max="11"></div>
-    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" id="wt" placeholder="170" min="60" max="1000"></div>
-    <div class="pf"><label for="age">Age</label><input type="number" id="age" placeholder="30" min="1" max="120"></div>
+    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" id="ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
+    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" id="ht-in" placeholder="e.g. 10" min="0" max="11"></div>
+    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
+    <div class="pf"><label for="age">Age</label><input type="number" id="age" placeholder="e.g. 30" min="1" max="120"></div>
   </div>
   <div class="prof-hint" id="bmi-hint">Enter your measurements for the doctor summary. Use the toggle above to switch body model.</div>
   <button class="params-toggle shape-toggle" id="shape-toggle" aria-expanded="false" aria-controls="shape-panel">
@@ -274,7 +322,17 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         Markers
       </button>
     </div>
-    <div class="viewer" id="viewer"></div>
+    <div class="viewer" id="viewer">
+      <div class="pick-menu" id="pick-menu" role="dialog" aria-label="Entries at this spot" hidden>
+        <p class="pick-title" id="pick-title"></p>
+        <div class="pick-list" id="pick-list"></div>
+      </div>
+      <div class="trace-bar" id="trace-bar" hidden>
+        <span class="trace-msg" id="trace-msg" aria-live="polite"></span>
+        <button type="button" class="trace-btn" id="trace-undo">Undo</button>
+        <button type="button" class="trace-btn done" id="trace-done">Done</button>
+      </div>
+    </div>
     <div class="zone-hint" id="zhint">Click on body to mark pain · Drag to rotate · Ctrl + scroll to zoom</div>
   </section>
   <section class="detail">
@@ -293,11 +351,48 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         <option value="sharp" selected>Sharp</option><option value="shooting">Shooting</option><option value="stabbing">Stabbing</option>
         <option value="stinging">Stinging</option><option value="throbbing">Throbbing</option><option value="tingling">Tingling</option>
         <option value="tightness">Tightness</option><option value="weakness">Weakness</option><option value="swelling">Swelling</option>
-      </select></div>
+      </select>
+        <p class="ftype-def" id="ftype-def" aria-live="polite"></p>
+        <button type="button" class="params-toggle ftype-more" id="ftype-more" aria-expanded="false" aria-controls="ftype-guide">
+          <svg class="summ-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+          Not sure which fits? Compare all
+        </button>
+        <div class="ftype-guide" id="ftype-guide" hidden></div>
+        <p class="route-nudge" id="route-nudge" hidden>Does it travel? Turn on the switch below.</p>
+      </div>
+      <div class="fg route-fg">
+        <label class="route-switch"><input type="checkbox" id="route-on"><span>This pain travels or is felt elsewhere</span></label>
+        <div class="route-panel" id="route-panel" hidden>
+          <div class="when-row" id="route-kind" role="group" aria-label="How it spreads">
+            <button type="button" class="when-chip" data-kind="travels">Travels to</button>
+            <button type="button" class="when-chip" data-kind="referred">Also felt at</button>
+          </div>
+          <p class="route-sum" id="route-sum" aria-live="polite"></p>
+          <div class="route-acts">
+            <button type="button" class="btn-ghost route-btn" id="route-add">Add points</button>
+            <button type="button" class="btn-ghost route-btn" id="route-undo">Undo</button>
+            <button type="button" class="btn-ghost route-btn" id="route-clear">Clear</button>
+          </div>
+        </div>
+      </div>
       <div class="fg"><label for="fdur">Duration</label><input type="text" id="fdur" placeholder="e.g. 2 days, since Monday"></div>
       <div class="fg"><label for="fnotes">Notes</label><textarea id="fnotes" placeholder="Triggers, what makes it worse or better..."></textarea></div>
-      <div class="fg"><label id="fdate-lbl">Date &amp; Time</label>
-        <div class="dtp-root" id="dtp-root">
+      <div class="fg"><label id="fdate-lbl">When did it happen?</label>
+        <p class="when-sum" id="when-sum" aria-live="polite"></p>
+        <div class="when-row" id="when-day" role="group" aria-label="Day">
+          <button type="button" class="when-chip" data-day="0">Today</button>
+          <button type="button" class="when-chip" data-day="1">Yesterday</button>
+          <button type="button" class="when-chip" data-day="pick">Other day…</button>
+        </div>
+        <div class="when-row" id="when-time" role="group" aria-label="Time of day">
+          <button type="button" class="when-chip" data-t="now">Just now</button>
+          <button type="button" class="when-chip" data-t="morning">Morning</button>
+          <button type="button" class="when-chip" data-t="afternoon">Afternoon</button>
+          <button type="button" class="when-chip" data-t="evening">Evening</button>
+          <button type="button" class="when-chip" data-t="night">Night</button>
+          <button type="button" class="when-chip" data-t="exact">Exact time…</button>
+        </div>
+        <div class="dtp-root" id="dtp-root" hidden>
           <button type="button" class="dtp-trigger" id="dtp-trig" aria-haspopup="dialog" aria-expanded="false" aria-controls="dtp" aria-labelledby="fdate-lbl dtp-tdate dtp-ttime">
             <span class="dtp-t-date" id="dtp-tdate">—</span><span class="dtp-t-sep" aria-hidden="true"></span><span class="dtp-t-time" id="dtp-ttime">—</span>
           </button>
@@ -838,32 +933,46 @@ function makeDecal(mesh,point,normal,size,tex){
   d.renderOrder=1;
   return d;
 }
-function pickEntry(){
-  const hits=raycaster.intersectObjects(pinHitMeshes.concat(allMeshes),false);
-  if(!hits.length)return null;
-  const id=hits[0].object.userData.entryId;
-  if(id)return ST.entries.find(x=>x.id===id)||null;
-  return nearestEntry(hits[0].point,12);
-}
-
-function nearestEntry(hitPoint,maxDist){
-  let best=null,bestD=maxDist;
-  activeBodyEntries().forEach(e=>{
-    const d=entryWorld(e).point.distanceTo(hitPoint);
-    if(d<bestD){bestD=d;best=e}
+// What a tap/hover in Markers mode lands on, best first. A single marker always beats a route line or a
+// route's in-between point sitting under it, and when several markers share the spot they're all returned
+// (the caller shows a chooser) so no entry can hide under another.
+const PICK_RANK={marker:0,point:1,line:2},STACK_DIST=4;
+function pickEntries(){
+  const ray=raycaster.ray,body=raycaster.intersectObjects(allMeshes,false)[0];
+  const limit=body?body.distance+2:Infinity;   // ignore markers on the far side of the body
+  const found=new Map();
+  raycaster.intersectObjects(pinHitMeshes,false).forEach(h=>{
+    const id=h.object.userData.entryId,r=PICK_RANK[h.object.userData.pick]??2;
+    if(id&&h.distance<limit&&(!found.has(id)||r<found.get(id)))found.set(id,r);
   });
-  return best;
+  let list=[...found].map(([id,r])=>({e:ST.entries.find(x=>x.id===id),r})).filter(x=>x.e);
+  if(!list.length&&body){
+    // Near miss: the closest marker facing the viewer (never one through the body, never a route point).
+    const near=activeBodyEntries().map(e=>({e,w:entryWorld(e)})).filter(x=>x.w.normal.dot(ray.direction)<0)
+      .map(x=>({e:x.e,d:x.w.point.distanceTo(body.point)})).filter(x=>x.d<12).sort((a,b)=>a.d-b.d);
+    if(near.length)list=[{e:near[0].e,r:3}];
+  }
+  if(!list.length)return [];
+  const top=Math.min(...list.map(x=>x.r));
+  list=list.filter(x=>x.r===top);
+  if(top===1||top===2)return list;   // route points/lines: only what the tap actually touched
+  // Markers: the one nearest the tap, plus any stacked on (almost) the same spot — the same markers
+  // that get a count badge. Markers that are merely close by don't trigger the chooser.
+  const lead=list.map(x=>({e:x.e,p:entryWorld(x.e).point})).sort((a,b)=>ray.distanceToPoint(a.p)-ray.distanceToPoint(b.p))[0];
+  return activeBodyEntries().map(e=>({e,p:entryWorld(e).point})).filter(x=>x.p.distanceTo(lead.p)<STACK_DIST)
+    .sort((a,b)=>(a.e===lead.e?-1:b.e===lead.e?1:0)).map(x=>({e:x.e,r:top}));
 }
 
 function renderMarkers3D(){
   if(!bodyGroup)return;
-  const toRemove=bodyGroup.children.filter(c=>c.userData&&c.userData.isPainPin);
+  const toRemove=bodyGroup.children.filter(c=>c.userData&&(c.userData.isPainPin||c.userData.isRoutePreview));
   toRemove.forEach(c=>{
     bodyGroup.remove(c);
     c.traverse(ch=>{if(ch.geometry)ch.geometry.dispose();if(ch.material)ch.material.dispose()});
   });
   painPins.length=0;
   pinHitMeshes=[];
+  drawRoutePreview();   // the route being traced shows even with Markers off, like the preview pin
   if(!showMarkers)return;
   bodyGroup.updateMatrixWorld(true);
   activeBodyEntries().forEach(e=>{
@@ -873,6 +982,7 @@ function renderMarkers3D(){
     g.userData={isPainPin:true,entryId:e.id};
 
     const halo=makeDecal(w.mesh||allMeshes[0],w.point,n,MARKER_SIZE,markerTex(hex,{fill:true}));
+    halo.renderOrder=3;   // above route lines, so a single spot on a route still reads as its own marker
     g.add(halo);
 
     // Seated in the skin: centre just outside the surface so a little over half the sphere shows.
@@ -887,9 +997,202 @@ function renderMarkers3D(){
 
     painPins.push({stud,halo,time:Math.random()*Math.PI*2});
     stud.userData.entryId=hit.userData.entryId=e.id;
+    stud.userData.pick=hit.userData.pick='marker';
     pinHitMeshes.push(stud,hit);
+    // While this entry's route is being edited, the draft replaces the saved line.
+    if(e.route&&!(rt.on&&e.id===ST.editId))drawRoute(g,[e,...e.route.points],e.route.kind,hex,e.id);
     bodyGroup.add(g);
   });
+  drawStackBadges();
+  // Place the new pins now: a click before the next rendered frame would otherwise hit them at the origin.
+  bodyGroup.updateMatrixWorld(true);
+}
+
+// A small count over markers that sit on (almost) the same spot, so an overlap is visible before clicking.
+function stackTex(n){
+  const key='stack'+n;if(texCache[key])return texCache[key];
+  const S=128,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  x.fillStyle='rgba(6,16,24,0.88)';x.beginPath();x.arc(S/2,S/2,S*0.46,0,Math.PI*2);x.fill();
+  x.strokeStyle='#ffffff';x.lineWidth=S*0.06;x.beginPath();x.arc(S/2,S/2,S*0.4,0,Math.PI*2);x.stroke();
+  x.fillStyle='#ffffff';x.font=`700 ${S*0.5}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(String(n),S/2,S/2+S*0.03);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return texCache[key]=t;
+}
+function drawStackBadges(){
+  const act=activeBodyEntries().map(e=>({e,w:entryWorld(e)})),used=new Set();
+  act.forEach(a=>{
+    if(used.has(a.e.id))return;
+    const grp=act.filter(b=>!used.has(b.e.id)&&b.w.point.distanceTo(a.w.point)<STACK_DIST);
+    if(grp.length<2)return;
+    grp.forEach(b=>used.add(b.e.id));
+    const c=new THREE.Vector3(),n=new THREE.Vector3();grp.forEach(b=>{c.add(b.w.point);n.add(b.w.normal)});
+    c.divideScalar(grp.length);n.normalize();
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:stackTex(grp.length),depthWrite:false,toneMapped:false}));
+    sp.scale.set(2.8,2.8,1);sp.position.copy(c).addScaledVector(n,3.2);sp.renderOrder=4;sp.userData={isPainPin:true};
+    bodyGroup.add(sp);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   ROUTES — pain that travels, or is also felt elsewhere
+   ═══════════════════════════════════════════ */
+// Only the tapped spots are saved. The line between them is worked out here, as the shortest way across
+// the skin, so it follows every reshape the same way anchors do and the sync file stays small.
+const ROUTE_MAX=10,ROUTE_LIFT=0.5,ROUTE_R=0.32;
+const rt={on:false,tracing:false,kind:'travels',points:[]};
+let routeGraph=null;
+
+function getRouteGraph(){
+  if(!bodyMesh)return null;
+  const geo=bodyMesh.geometry;
+  if(routeGraph&&routeGraph.geo===geo)return routeGraph;   // a rebuilt body has a new geometry
+  geo.computeBoundingBox();
+  const H=geo.boundingBox.max.y-geo.boundingBox.min.y,rep=buildWeld(geo,H*1e-5);
+  return routeGraph={geo,rep,nb:buildNeighbors(geo,rep),segs:new Map()};
+}
+
+// The body vertex a spot sits on (seam-welded, so paths cross UV seams).
+function spotVertex(p){
+  const g=getRouteGraph(),an=p.anchor;
+  if(an&&allMeshes[an.mi]===bodyMesh&&Math.max(an.a,an.b,an.c)<g.rep.length){
+    const w=[an.u,an.v,an.w];return g.rep[[an.a,an.b,an.c][w.indexOf(Math.max(...w))]];
+  }
+  const l=bodyMesh.worldToLocal(entryWorld(p).point.clone()),pos=g.geo.attributes.position;
+  let best=0,bd=Infinity;
+  for(let i=0;i<pos.count;i++){
+    if(g.rep[i]!==i)continue;
+    const d=(pos.getX(i)-l.x)**2+(pos.getY(i)-l.y)**2+(pos.getZ(i)-l.z)**2;
+    if(d<bd){bd=d;best=i}
+  }
+  return best;
+}
+
+// Dijkstra over the welded vertex graph (~7k vertices, a few ms). Returns vertex indices, or null if unreachable.
+function surfacePath(a,b){
+  if(a===b)return [a];
+  const g=getRouteGraph(),pos=g.geo.attributes.position,n=pos.count;
+  const dist=new Float64Array(n).fill(Infinity),prev=new Int32Array(n).fill(-1),heap=[];
+  const push=(d,v)=>{heap.push([d,v]);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p][0]<=d)break;heap[i]=heap[p];i=p}heap[i]=[d,v]};
+  const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){let i=0;for(;;){const l=2*i+1,r=l+1;let m=-1,md=last[0];
+    if(l<heap.length&&heap[l][0]<md){m=l;md=heap[l][0]}if(r<heap.length&&heap[r][0]<md)m=r;if(m<0)break;heap[i]=heap[m];i=m}heap[i]=last}return top};
+  dist[a]=0;push(0,a);
+  while(heap.length){
+    const [d,v]=pop();
+    if(v===b)break;
+    if(d>dist[v])continue;
+    const nbs=g.nb[v];if(!nbs)continue;
+    const vx=pos.getX(v),vy=pos.getY(v),vz=pos.getZ(v);
+    for(const u of nbs){
+      const nd=d+Math.hypot(pos.getX(u)-vx,pos.getY(u)-vy,pos.getZ(u)-vz);
+      if(nd<dist[u]){dist[u]=nd;prev[u]=v;push(nd,u)}
+    }
+  }
+  if(dist[b]===Infinity)return null;
+  const out=[];for(let v=b;v!==-1;v=prev[v])out.push(v);
+  return out.reverse();
+}
+
+// World-space points for the line from spot p to spot q, lifted just off the skin and smoothed.
+function surfaceLine(p,q){
+  const g=getRouteGraph(),va=spotVertex(p),vb=spotVertex(q),key=va+'>'+vb;
+  if(g.segs.has(key))return g.segs.get(key);
+  const pos=g.geo.attributes.position,nor=g.geo.attributes.normal,m=bodyMesh.matrixWorld;
+  const wp=entryWorld(p),wq=entryWorld(q);
+  const lift=w=>w.point.clone().addScaledVector(w.normal.clone().normalize(),ROUTE_LIFT);
+  const pts=[lift(wp)];
+  const path=surfacePath(va,vb)||[];
+  path.forEach(v=>{
+    const pt=new THREE.Vector3().fromBufferAttribute(pos,v).applyMatrix4(m);
+    const n=nor?new THREE.Vector3().fromBufferAttribute(nor,v).transformDirection(m):new THREE.Vector3();
+    pts.push(pt.addScaledVector(n,ROUTE_LIFT));
+  });
+  pts.push(lift(wq));
+  // Vertex-to-vertex paths zigzag; a light smooth keeps the ends pinned to the tapped spots.
+  for(let it=0;it<3;it++)for(let i=1;i<pts.length-1;i++)pts[i].multiplyScalar(0.5).addScaledVector(pts[i-1],0.25).addScaledVector(pts[i+1],0.25);
+  const clean=pts.filter((pt,i)=>i===0||pt.distanceTo(pts[i-1])>0.05);
+  if(clean.length<2)clean.push(clean[0].clone().add(new THREE.Vector3(0,0.01,0)));
+  g.segs.set(key,clean);
+  return clean;
+}
+
+// A tube whose opacity is set per point along its length (fade, or dashes).
+function routeTube(pts,radius,color,alphaAt,order,from,total){
+  const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal'),len=curve.getLength();
+  const segs=Math.max(4,Math.ceil(len*3)),rad=6,geo=new THREE.TubeGeometry(curve,segs,radius,rad,false);
+  const col=new Float32Array(geo.attributes.position.count*4);
+  for(let i=0;i<=segs;i++){
+    const a=alphaAt(from+i/segs*len,total);
+    for(let j=0;j<=rad;j++){const k=(i*(rad+1)+j)*4;col[k]=color.r;col[k+1]=color.g;col[k+2]=color.b;col[k+3]=a}
+  }
+  geo.setAttribute('color',new THREE.BufferAttribute(col,4));
+  const mesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,toneMapped:false}));
+  mesh.renderOrder=order;
+  return mesh;
+}
+
+// Draws a route into group g. spots[0] is the starting spot (its marker is drawn elsewhere).
+// travels: one line through the spots in order, strongest at the start, arrow at the end.
+// referred: a dashed line from the starting spot to each other spot, with a ring on each.
+// entryId set = saved entry (clickable); unset = the draft being traced.
+function drawRoute(g,spots,kind,hex,entryId){
+  if(!getRouteGraph()||spots.length<2)return;
+  const color=new THREE.Color(hex),dark=new THREE.Color(0x061018);
+  const pairs=kind==='referred'?spots.slice(1).map(q=>[spots[0],q]):spots.slice(1).map((q,i)=>[spots[i],q]);
+  const lines=pairs.map(([p,q])=>surfaceLine(p,q));
+  const lens=lines.map(l=>new THREE.CatmullRomCurve3(l,false,'centripetal').getLength());
+  const total=lens.reduce((s,l)=>s+l,0)||1;
+  const fade=(d,t)=>lerp(1,0.35,clamp(d/t,0,1));
+  const dash=d=>(d%2.6)<1.6?0.95:0;
+  let from=0;
+  lines.forEach((l,i)=>{
+    const f=kind==='referred'?dash:fade,off=kind==='referred'?0:from,tot=kind==='referred'?lens[i]:total;
+    g.add(routeTube(l,ROUTE_R*1.8,dark,(d,t)=>f(d,t)*0.55,1,off,tot));   // dark edge keeps it readable on any skin tone
+    const tube=routeTube(l,ROUTE_R,color,f,2,off,tot);
+    g.add(tube);
+    if(entryId){tube.userData.entryId=entryId;tube.userData.pick='line';pinHitMeshes.push(tube)}
+    from+=lens[i];
+  });
+  const stud=(pt,n,r)=>{
+    const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35}));
+    s.position.copy(pt).addScaledVector(n,0.3);g.add(s);return s;
+  };
+  spots.slice(1).forEach((p,i)=>{
+    const w=entryWorld(p),n=w.normal.clone().normalize(),last=i===spots.length-2;
+    if(kind==='referred'){
+      g.add(makeDecal(w.mesh||allMeshes[0],w.point,n,5.5,markerTex(hex)));
+      stud(w.point,n,0.8);
+    }else if(last){
+      // Arrowhead lying along the last stretch of the line, tip on the final spot.
+      const l=lines[lines.length-1],tip=l[l.length-1],back=l[Math.max(0,l.length-4)];
+      const dir=tip.clone().sub(back);
+      if(dir.lengthSq()<1e-6)dir.copy(n);
+      dir.normalize();
+      const cone=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.4,16),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35}));
+      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+      cone.position.copy(tip).addScaledVector(dir,-1.2);
+      g.add(cone);
+      if(entryId){cone.userData.entryId=entryId;cone.userData.pick='line';pinHitMeshes.push(cone)}
+    }else stud(w.point,n,0.7);
+    if(entryId){
+      const hit=new THREE.Mesh(new THREE.SphereGeometry(2,10,8),new THREE.MeshBasicMaterial({visible:false}));
+      hit.position.copy(w.point).addScaledVector(n,0.8);hit.userData.entryId=entryId;hit.userData.pick='point';
+      g.add(hit);pinHitMeshes.push(hit);
+    }
+  });
+}
+
+// The spot the route starts from: the entry being edited, or the spot just tapped for a new entry.
+function routeOrigin(){
+  if(ST.editId){const e=ST.entries.find(x=>x.id===ST.editId);if(e)return e}
+  const c=ST.clickPt;
+  return c&&c.anchor!==undefined?{point:c.point,normal:c.normal,anchor:c.anchor,label:c.region.label}:null;
+}
+
+function drawRoutePreview(){
+  if(!rt.on||!rt.points.length||!bodyGroup)return;
+  const o=routeOrigin();if(!o)return;
+  const g=new THREE.Group();g.userData={isRoutePreview:true};
+  drawRoute(g,[o,...rt.points],rt.kind,PREVIEW_HEX);
+  bodyGroup.add(g);
 }
 
 /* ═══════════════════════════════════════════
@@ -1195,7 +1498,7 @@ function flashZoomHint(){
 }
 
 function setupControls(el){
-  let dragging=false,downX=0,downY=0,prevX=0,prevY=0,moved=false;
+  let dragging=false,downX=0,downY=0,prevX=0,prevY=0,moved=false,handledAt=0;
   let pinchDist=0;
 
   el.addEventListener('pointerdown',e=>{
@@ -1208,7 +1511,7 @@ function setupControls(el){
     if(!dragging)return;
     const dx=e.clientX-prevX,dy=e.clientY-prevY;
     const totalDx=e.clientX-downX,totalDy=e.clientY-downY;
-    if(Math.abs(totalDx)+Math.abs(totalDy)>12)moved=true;
+    if(Math.abs(totalDx)+Math.abs(totalDy)>12){if(!moved)closePickMenu();moved=true}
     if(moved){
       theta-=dx*0.008;
       phi-=dy*0.008;
@@ -1218,11 +1521,11 @@ function setupControls(el){
     prevX=e.clientX;prevY=e.clientY;
   });
   el.addEventListener('pointerup',e=>{
-    if(!moved&&dragging)handleClick(e,el);
+    if(!moved&&dragging){handleClick(e,el);handledAt=performance.now()}
     dragging=false;
   });
   el.addEventListener('click',e=>{
-    if(!moved)handleClick(e,el);
+    if(!moved&&performance.now()-handledAt>400)handleClick(e,el);
   });
   el.addEventListener('wheel',e=>{
     if(!e.ctrlKey&&!e.metaKey){flashZoomHint();return}
@@ -1263,9 +1566,16 @@ function setupControls(el){
     raycaster.setFromCamera(mouse,camera);
     const hint=document.getElementById('zhint');
 
+    if(rt.tracing){
+      const onBody=raycaster.intersectObjects(allMeshes).length>0;
+      hint.textContent=onBody?`Click to add point ${rt.points.length+2} · Drag to rotate`:'Click the body to add a point · Drag to rotate';
+      hint.classList.toggle('active',onBody);el.style.cursor=onBody?'crosshair':'grab';
+      return;
+    }
+
     if(showMarkers){
-      const near=pickEntry();
-      if(near){hint.textContent=near.label+' — click to view';hint.classList.add('active');el.style.cursor='pointer';return}
+      const picks=pickEntries();
+      if(picks.length){hint.textContent=picks.length>1?`${picks.length} entries here — click to choose`:picks[0].e.label+' — click to view';hint.classList.add('active');el.style.cursor='pointer';return}
       hint.textContent=activeBodyEntries().length?HINT_MARKERS:'No active markers on this body · Turn Markers off to log new pain';
       hint.classList.remove('active');
       el.style.cursor='grab';
@@ -1290,9 +1600,17 @@ function handleClick(e,el){
   mouse.y=-((ey-rect.top)/rect.height)*2+1;
   raycaster.setFromCamera(mouse,camera);
 
+  if(rt.tracing){
+    const hits=raycaster.intersectObjects(allMeshes,true);
+    if(hits.length)addRoutePoint(hits[0]);
+    return;
+  }
+
   if(showMarkers){
-    const near=pickEntry();
-    if(near)editEntry(near);
+    const picks=pickEntries();
+    closePickMenu();
+    if(picks.length===1)editEntry(picks[0].e);
+    else if(picks.length>1)openPickMenu(picks.map(x=>x.e),ex-rect.left,ey-rect.top);
     return;
   }
 
@@ -1376,7 +1694,7 @@ function loadTombstones(){try{const d=localStorage.getItem('bpt_tombstones');if(
    DATE/TIME PICKER (ported from Life Line's llp)
    ═══════════════════════════════════════════ */
 const dtp={
-  sel:new Date(),viewDate:new Date(),calView:'month',isOpen:false,H:12,M:0,AP:'AM',yearPageStart:null,
+  sel:new Date(),viewDate:new Date(),calView:'month',isOpen:false,H:12,M:0,AP:'AM',yearPageStart:null,onChange:null,
   _MN:['January','February','March','April','May','June','July','August','September','October','November','December'],
   _WD:['Su','Mo','Tu','We','Th','Fr','Sa'],
   _p:n=>String(n).padStart(2,'0'),
@@ -1409,7 +1727,7 @@ const dtp={
     this.sel=new Date(date);
     this.viewDate=new Date(date.getFullYear(),date.getMonth(),1);
     this.H=date.getHours()%12||12;
-    this.M=Math.round(date.getMinutes()/5)*5%60;
+    this.M=date.getMinutes();
     this.AP=date.getHours()>=12?'PM':'AM';
     if(this.calView!=='month'){this.calView='month';this._showV('month')}
     this._renderCal();this._upd();this._syncT();this._syncAP();
@@ -1418,7 +1736,7 @@ const dtp={
   close(){this.isOpen=false;this.$('dtp').classList.add('closed');this.$('dtp-trig').setAttribute('aria-expanded','false')},
   toggle(){this.isOpen?this.close():this.open()},
   confirm(){this.close();this.$('dtp-trig').focus()},
-  goToday(){this.setValue(new Date())},
+  goToday(){this.setValue(new Date());this._notify('day')},
   navMonth(d){this.viewDate=new Date(this.viewDate.getFullYear(),this.viewDate.getMonth()+d,1);this._renderCal()},
   toggleView(){
     this.calView=this.calView==='month'?'year':'month';
@@ -1428,9 +1746,11 @@ const dtp={
   navPrev(){this.calView==='year'?this.navYears(-1):this.navMonth(-1)},
   navNext(){this.calView==='year'?this.navYears(1):this.navMonth(1)},
   navYears(d){this.yearPageStart+=d*16;this._renderYears()},
-  adjH(d){this.H=((this.H-1+d+12)%12)+1;this._syncT();this._upd()},
-  adjM(d){this.M=(this.M+d*5+60)%60;this._syncT();this._upd()},
-  setAP(v){this.AP=v;this._syncAP();this._upd()},
+  adjH(d){this.H=((this.H-1+d+12)%12)+1;this._syncT();this._upd();this._notify('time')},
+  // Steps land on the 5-minute grid (2:47 -> 2:50 / 2:45) without rounding a time you typed or loaded.
+  adjM(d){const m=d>0?(Math.floor(this.M/5)+1)*5:(Math.ceil(this.M/5)-1)*5;this.M=(m+60)%60;this._syncT();this._upd();this._notify('time')},
+  setAP(v){this.AP=v;this._syncAP();this._upd();this._notify('time')},
+  _notify(kind){if(this.onChange)this.onChange(kind)},
   _upd(){
     this.$('dtp-tdate').textContent=this.sel.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'});
     this.$('dtp-ttime').textContent=`${this._p(this.H)}:${this._p(this.M)} ${this.AP}`;
@@ -1461,7 +1781,7 @@ const dtp={
         if(dt.toDateString()===now)b.classList.add('tod');
         if(dt.toDateString()===sel){b.classList.add('sel');b.setAttribute('aria-pressed','true')}
         b.setAttribute('aria-label',dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}));
-        b.addEventListener('click',e=>{e.stopPropagation();this.sel=new Date(dt);this._renderCal();this._upd()});
+        b.addEventListener('click',e=>{e.stopPropagation();this.sel=new Date(dt);this._renderCal();this._upd();this._notify('day')});
       }
       dy.appendChild(b);
     });
@@ -1481,16 +1801,113 @@ const dtp={
   }
 };
 
+// "When did it happen?" — quick picks on top of the exact picker (dtp).
+// day: 0 today, 1 yesterday, 'pick' = the day chosen in the calendar.
+// t: 'now' (exact moment the form opened), a rough part of day (saved with timeApprox), or 'exact' (dtp's time).
+const DAY_PARTS={morning:{start:5,rep:9},afternoon:{start:12,rep:14},evening:{start:17,rep:19},night:{start:21,rep:23}};
+const when={
+  day:0,t:'now',nowStamp:new Date(),
+  $:id=>document.getElementById(id),
+  init(){
+    this.$('when-day').addEventListener('click',e=>{
+      const b=e.target.closest('.when-chip');if(!b||b.disabled)return;
+      e.stopPropagation();
+      if(b.dataset.day==='pick'){this.day='pick';if(this.t==='now')this.t='afternoon';this._showPicker(true);dtp.open()}
+      else this._setDay(+b.dataset.day);
+      this._render();
+    });
+    this.$('when-time').addEventListener('click',e=>{
+      const b=e.target.closest('.when-chip');if(!b||b.disabled)return;
+      e.stopPropagation();
+      const t=b.dataset.t;
+      if(t==='exact'){
+        const from=this._resolve();      // start the exact picker from whatever was chosen so far
+        this.t='exact';
+        dtp.setValue(from);
+        this._showPicker(true);dtp.open();
+      }else{this.t=t;if(t==='now')this.day=0;this._showPicker(this.day==='pick')}
+      this._render();
+    });
+    // Changing the day in the calendar keeps a rough time; touching hour/minute/AM-PM makes it exact.
+    dtp.onChange=kind=>{
+      if(kind==='time')this.t='exact';
+      const d=this._dayOffset(dtp.sel);this.day=d===0||d===1?d:'pick';
+      if(this.t==='now'&&this.day!==0)this.t='afternoon';
+      this._render();
+    };
+  },
+  start(){this.nowStamp=new Date();this.day=0;this.t='now';dtp.setValue(this.nowStamp);dtp.close();this._showPicker(false);this._render()},
+  load(dateStr,approx){
+    const d=new Date(dateStr),ok=!isNaN(d);
+    this.nowStamp=new Date();
+    dtp.setValue(ok?d:new Date());dtp.close();
+    const off=this._dayOffset(dtp.sel);this.day=off===0||off===1?off:'pick';
+    this.t=DAY_PARTS[approx]?approx:'exact';
+    this._showPicker(this.day==='pick'||this.t==='exact');
+    this._render();
+  },
+  approx(){return DAY_PARTS[this.t]?this.t:null},
+  getLocalString(){
+    const d=this._resolve(),p=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  },
+  _baseDay(){
+    if(this.day==='pick'){const s=dtp.sel;return new Date(s.getFullYear(),s.getMonth(),s.getDate())}
+    const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()-this.day);
+  },
+  _resolve(){
+    if(this.t==='now')return new Date(this.nowStamp);
+    if(this.t==='exact')return dtp.getValue();
+    const d=this._baseDay();d.setHours(DAY_PARTS[this.t].rep,0,0,0);
+    const now=new Date();return d>now?now:d;   // "this afternoon" logged at 1 PM can't be 2 PM yet
+  },
+  _dayOffset(date){const n=new Date(),a=new Date(n.getFullYear(),n.getMonth(),n.getDate()),b=new Date(date.getFullYear(),date.getMonth(),date.getDate());return Math.round((a-b)/864e5)},
+  _setDay(d){
+    this.day=d;
+    if(this.t==='now'&&d!==0)this.t='afternoon';
+    if(this.t==='exact'){const v=dtp.getValue(),b=this._baseDay();b.setHours(v.getHours(),v.getMinutes(),0,0);dtp.setValue(b)}
+    // A part of today that hasn't started yet isn't a valid choice.
+    if(d===0&&DAY_PARTS[this.t]&&DAY_PARTS[this.t].start>new Date().getHours())this.t='now';
+    this._showPicker(this.t==='exact');
+  },
+  _showPicker(show){this.$('dtp-root').hidden=!show;if(!show)dtp.close()},
+  _render(){
+    const hr=new Date().getHours();
+    this.$('when-day').querySelectorAll('.when-chip').forEach(b=>b.setAttribute('aria-pressed',String(String(this.day)===b.dataset.day)));
+    this.$('when-time').querySelectorAll('.when-chip').forEach(b=>{
+      const t=b.dataset.t;
+      b.setAttribute('aria-pressed',String(t===this.t));
+      b.disabled=t==='now'?this.day!==0:(this.day===0&&DAY_PARTS[t]&&DAY_PARTS[t].start>hr);
+    });
+    const d=this._resolve();
+    const dayTxt=this.day===0?'Today':this.day===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const clock=d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    const sum=this.$('when-sum');
+    sum.textContent='';
+    if(this.t==='now')sum.append(`${dayTxt} · just now `,Object.assign(document.createElement('small'),{textContent:`(${clock})`}));
+    else if(DAY_PARTS[this.t])sum.append(`${dayTxt} · ${this.t} `,Object.assign(document.createElement('small'),{textContent:'(approx.)'}));
+    else sum.append(`${dayTxt} · ${clock}`);
+  }
+};
+
+function fmtWhen(e){
+  if(e.timeApprox&&DAY_PARTS[e.timeApprox]){
+    const x=new Date(e.date);
+    if(!isNaN(x))return `${x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}, ${e.timeApprox} (approx.)`;
+  }
+  return fmtDate(e.date);
+}
+
 function openForm(label,viewName){
   const form=document.getElementById('eform');
   form.hidden=false;
   document.getElementById('ftitle').textContent='Log Pain';
   document.getElementById('floc').value=`${label} — ${viewName}`;
   document.getElementById('fsev').value=5;updateSev(5);
-  document.getElementById('ftype').value='sharp';
+  document.getElementById('ftype').value='sharp';resetRoute();updatePainDef();setPainGuide(false);
   document.getElementById('fdur').value='';
   document.getElementById('fnotes').value='';
-  dtp.setValue(new Date());
+  when.start();
   document.getElementById('fsave').textContent='Save Entry';
   form.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -1503,16 +1920,15 @@ function editEntry(entry){
   document.getElementById('ftitle').textContent='Edit Entry';
   document.getElementById('floc').value=`${entry.label} — ${entry.viewLabel}`;
   document.getElementById('fsev').value=entry.severity;updateSev(entry.severity);
-  document.getElementById('ftype').value=entry.painType;
+  document.getElementById('ftype').value=entry.painType;loadRoute(entry.route);updatePainDef();setPainGuide(false);
   document.getElementById('fdur').value=entry.duration;
   document.getElementById('fnotes').value=entry.notes;
-  const d=new Date(entry.date);
-  dtp.setValue(isNaN(d)?new Date():d);
+  when.load(entry.date,entry.timeApprox);
   document.getElementById('fsave').textContent='Update Entry';
   form.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-function closeForm(){ST.clickPt=null;ST.editId=null;clearPreviewPin();dtp.close();document.getElementById('eform').hidden=true}
+function closeForm(){ST.clickPt=null;ST.editId=null;clearPreviewPin();dtp.close();document.getElementById('eform').hidden=true;resetRoute()}
 
 function saveEntry(){
   const loc=document.getElementById('floc').value;
@@ -1520,13 +1936,13 @@ function saveEntry(){
   const pt=document.getElementById('ftype').value;
   const dur=document.getElementById('fdur').value.trim();
   const notes=document.getElementById('fnotes').value.trim();
-  const dt=dtp.getLocalString();
+  const dt=when.getLocalString(),approx=when.approx();
   const wasEdit=!!ST.editId;
   if(!wasEdit&&!ST.clickPt)return;
 
   if(ST.editId){
     const e=ST.entries.find(x=>x.id===ST.editId);
-    if(e){e.severity=sev;e.painType=pt;e.duration=dur;e.notes=notes;e.date=dt;e.label=loc.split(' — ')[0];e.updatedAt=Date.now()}
+    if(e){e.severity=sev;e.painType=pt;e.duration=dur;e.notes=notes;e.date=dt;e.timeApprox=approx;e.label=loc.split(' — ')[0];e.updatedAt=Date.now()}
   }else if(ST.clickPt){
     const p=ST.clickPt.point;
     ST.entries.push({
@@ -1539,7 +1955,7 @@ function saveEntry(){
       anchor:ST.clickPt.anchor||null,
       bodyType:currentBodyType,
       regionVer:1,
-      severity:sev,painType:pt,duration:dur,notes,date:dt,resolved:false,
+      severity:sev,painType:pt,duration:dur,notes,date:dt,timeApprox:approx,resolved:false,
       updatedAt:Date.now()
     });
   }
@@ -1584,8 +2000,8 @@ function renderLog(){
     <div class="log-item${e.resolved?' resolved':''}" data-id="${esc(e.id)}">
       <div class="log-dot" style="color:${sevColor(e.severity)};background:currentColor"></div>
       <div class="log-body">
-        <div class="log-loc">${esc(e.label)} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span></div>
-        <div class="log-meta">${esc(cap(e.painType))} · ${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtDate(e.date))}</div>
+        <div class="log-loc">${esc(e.label)}${e.route?esc(routeTail(e)):''} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span>${e.route?`<span class="log-tag">${e.route.kind==='referred'?'also felt at':'travels'}</span>`:''}</div>
+        <div class="log-meta">${esc(cap(e.painType))} · ${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtWhen(e))}</div>
         ${e.notes?`<div class="log-note">${esc(e.notes)}</div>`:''}
       </div>
       <div class="log-acts">
@@ -1602,7 +2018,7 @@ function renderLog(){
       if(!e)return;
       openConfirm({
         title:'Delete this entry?',
-        msg:`${e.label} — ${e.severity}/10 ${cap(e.painType)}, ${fmtDate(e.date)}. This can't be undone.`,
+        msg:`${e.label} — ${e.severity}/10 ${cap(e.painType)}, ${fmtWhen(e)}. This can't be undone.`,
         ok:'Delete',returnFocus:document.getElementById('hist-close'),
         onOk:()=>{
           if(ST.editId===e.id)closeForm();
@@ -1626,15 +2042,16 @@ function renderSummary(){
     active.sort((a,b)=>b.severity-a.severity).forEach((e,i)=>{
       t+=`${i+1}. ${e.label} (${e.viewLabel})\n`;
       t+=`   Severity: ${e.severity}/10 — ${cap(e.painType)}\n`;
+      if(e.route)t+=`   ${e.route.kind==='referred'?'Also felt at: '+e.route.points.map(p=>p.label).join(', '):'Travels to: '+e.route.points.map(p=>p.label).join(' → ')}\n`;
       if(e.duration)t+=`   Duration: ${e.duration}\n`;
-      t+=`   Recorded: ${fmtDate(e.date)}\n`;
+      t+=`   Recorded: ${fmtWhen(e)}\n`;
       if(e.notes)t+=`   Notes: ${e.notes}\n`;
       t+='\n';
     });
     t+=`OVERVIEW\n  Most severe: ${Math.max(...active.map(e=>e.severity))}/10\n`;
-    t+=`  Areas affected: ${[...new Set(active.map(e=>e.label))].join(', ')}\n  Total: ${active.length}\n\n`;
+    t+=`  Areas affected: ${[...new Set(active.flatMap(e=>[e.label,...(e.route?e.route.points.map(p=>p.label):[])]))].join(', ')}\n  Total: ${active.length}\n\n`;
   }else t+='No active pain points.\n\n';
-  if(resolved.length){t+=`RESOLVED (${resolved.length})\n`;resolved.forEach(e=>{t+=`  · ${e.label} — was ${e.severity}/10 ${cap(e.painType)} (${fmtDate(e.date)})\n`})}
+  if(resolved.length){t+=`RESOLVED (${resolved.length})\n`;resolved.forEach(e=>{t+=`  · ${e.label} — was ${e.severity}/10 ${cap(e.painType)} (${fmtWhen(e)})\n`})}
   body.textContent=t;
 }
 
@@ -1719,17 +2136,21 @@ function cleanEntry(e){
   const str=(v,max)=>typeof v==='string'?v.slice(0,max):'';
   const num=v=>typeof v==='number'&&Number.isFinite(v)?v:0;
   const vec=v=>v&&typeof v==='object'?{x:num(v.x),y:num(v.y),z:num(v.z)}:{x:0,y:0,z:0};
-  const an=e.anchor;
-  const anchorOk=an&&typeof an==='object'&&['mi','a','b','c'].every(k=>Number.isInteger(an[k])&&an[k]>=0)&&['u','v','w'].every(k=>typeof an[k]==='number'&&Number.isFinite(an[k]));
+  const anchor=an=>an&&typeof an==='object'&&['mi','a','b','c'].every(k=>Number.isInteger(an[k])&&an[k]>=0)&&['u','v','w'].every(k=>typeof an[k]==='number'&&Number.isFinite(an[k]))
+    ?{mi:an.mi,a:an.a,b:an.b,c:an.c,u:an.u,v:an.v,w:an.w}:null;
+  const r=e.route,spot=q=>q&&typeof q==='object'?{point:vec(q.point),normal:vec(q.normal),anchor:anchor(q.anchor),regionId:str(q.regionId,100),label:str(q.label,120)||'Body'}:null;
+  const rpts=r&&typeof r==='object'&&(r.kind==='travels'||r.kind==='referred')&&Array.isArray(r.points)?r.points.slice(0,ROUTE_MAX-1).map(spot).filter(Boolean):[];
   return{
     id:e.id,regionId:str(e.regionId,100),label:str(e.label,120)||'Body',viewLabel:str(e.viewLabel,40),
     point:vec(e.point),normal:vec(e.normal),
-    anchor:anchorOk?{mi:an.mi,a:an.a,b:an.b,c:an.c,u:an.u,v:an.v,w:an.w}:null,
+    anchor:anchor(e.anchor),
     bodyType:e.bodyType==='female'?'female':'male',regionVer:num(e.regionVer),
     severity:clamp(Math.round(num(e.severity))||1,1,10),
     painType:PAIN_TYPES.includes(e.painType)?e.painType:PAIN_TYPES[0],
     duration:str(e.duration,200),notes:str(e.notes,2000),
     date:typeof e.date==='string'&&DATE_RE.test(e.date)?e.date:dtp.getLocalString(),
+    timeApprox:Object.hasOwn(DAY_PARTS,e.timeApprox)?e.timeApprox:null,
+    route:rpts.length?{kind:r.kind,points:rpts}:null,
     resolved:e.resolved===true,updatedAt:num(e.updatedAt)||1
   };
 }
@@ -1890,7 +2311,11 @@ document.getElementById('vtabs').addEventListener('click',e=>{
 document.getElementById('fsev').addEventListener('input',e=>updateSev(e.target.value));
 document.getElementById('fclose').addEventListener('click',closeForm);
 document.getElementById('fcancel').addEventListener('click',closeForm);
-document.getElementById('fsave').addEventListener('click',saveEntry);
+// Entries with a route (or the switch on) go through saveRouteEntry; single spots keep the original saveEntry path.
+document.getElementById('fsave').addEventListener('click',()=>{
+  const e=ST.editId&&ST.entries.find(x=>x.id===ST.editId);
+  if(rt.on||(e&&e.route))saveRouteEntry();else saveEntry();
+});
 document.getElementById('pfilt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.filter=b.dataset.f;document.querySelectorAll('#pfilt button').forEach(x=>x.classList.toggle('on',x===b));renderLog()});
 const LOCK_SVG='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 function updateBodyToggle(){
@@ -1973,6 +2398,135 @@ SHAPE_PARTS.forEach(p=>{
   el.addEventListener('input',()=>setShape(p.id,+el.value/100));
   el.addEventListener('dblclick',()=>setShape(p.id,0));
 });
+// Pain-type dictionary: describes the sensation only (never a cause or diagnosis), worded so the
+// same term still means the same thing to a doctor reading the log.
+const PAIN_DICT={
+  aching:{def:'A steady, sore, heavy discomfort, like a muscle after overuse.',also:'sore, tender, heavy'},
+  burning:{def:'A hot, searing feeling, as if the area is scalded or on fire.',also:'hot, searing, scalding'},
+  cramping:{def:'A tight, gripping squeeze that often comes in waves, like a muscle knotting up.',also:'gripping, knotted, spasm'},
+  dull:{def:'A low, background discomfort that is hard to pinpoint.',also:'vague, deep, nagging'},
+  numbness:{def:'Reduced or missing feeling, as if the area is asleep.',also:'dead, asleep, can’t feel it'},
+  pressure:{def:'A heavy pushing or squeezing weight on or inside the area.',also:'heavy, squeezing, full'},
+  sharp:{def:'A sudden, intense pain in a spot you could point to with one finger.',also:'sudden, piercing, acute'},
+  shooting:{def:'A quick jolt that travels along a line, often from one area into another.',also:'zapping, electric, radiating'},
+  stabbing:{def:'A deep, intense pain like being jabbed with something pointed.',also:'jabbing, knife-like'},
+  stinging:{def:'A sharp, prickly pain near the surface, like a bee sting or a nettle.',also:'prickly, smarting, raw'},
+  throbbing:{def:'A pulsing pain that beats in a rhythm, often in time with your heartbeat.',also:'pounding, pulsing, beating'},
+  tingling:{def:'Pins and needles: a buzzing or crawling feeling under the skin.',also:'pins and needles, buzzing, crawling'},
+  tightness:{def:'A stiff, restricted feeling, as if the area is held and can’t stretch.',also:'stiff, tense, restricted'},
+  weakness:{def:'Loss of strength or control; the area won’t do what you ask, even without much pain.',also:'giving way, can’t grip'},
+  swelling:{def:'Puffiness or a full, stretched feeling, sometimes visibly larger.',also:'puffy, swollen, tight skin'}
+};
+const painGuide=document.getElementById('ftype-guide'),painMore=document.getElementById('ftype-more');
+function updatePainDef(){
+  const v=document.getElementById('ftype').value,d=PAIN_DICT[v];
+  document.getElementById('ftype-def').textContent=d?d.def:'';
+  document.getElementById('route-nudge').hidden=!(v==='shooting'&&!rt.on);
+  painGuide.querySelectorAll('.ftype-opt').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
+}
+function setPainGuide(open){painGuide.hidden=!open;painMore.setAttribute('aria-expanded',String(open))}
+[...document.querySelectorAll('#ftype option')].forEach(o=>{
+  const d=PAIN_DICT[o.value];if(!d)return;
+  const b=document.createElement('button');
+  b.type='button';b.className='ftype-opt';b.dataset.v=o.value;
+  const t=document.createElement('b');t.textContent=o.textContent;
+  const s=document.createElement('span');s.textContent=d.def;
+  const i=document.createElement('i');i.textContent='Also described as: '+d.also;
+  b.append(t,s,i);
+  b.addEventListener('click',()=>{const sel=document.getElementById('ftype');sel.value=o.value;updatePainDef();setPainGuide(false);sel.focus()});
+  painGuide.appendChild(b);
+});
+document.getElementById('ftype').addEventListener('change',updatePainDef);
+painMore.addEventListener('click',()=>{
+  setPainGuide(painGuide.hidden);
+  if(!painGuide.hidden){const cur=painGuide.querySelector('[aria-pressed="true"]');if(cur)cur.scrollIntoView({block:'nearest'})}
+});
+updatePainDef();
+
+/* --- Route controls: "This pain travels or is felt elsewhere" --- */
+const $r=id=>document.getElementById(id);
+function routeTail(e){const l=e.route.points.map(p=>p.label);return e.route.kind==='referred'?' + '+l.join(', '):' → '+l.join(' → ')}
+function renderRouteUI(){
+  $r('route-on').checked=rt.on;$r('route-panel').hidden=!rt.on;
+  $r('route-kind').querySelectorAll('.when-chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===rt.kind)));
+  const o=routeOrigin(),start=o?o.label:'Start',labels=rt.points.map(p=>p.label),sum=$r('route-sum');
+  if(labels.length){sum.textContent=rt.kind==='referred'?`${start} · also felt at ${labels.join(', ')}`:[start,...labels].join(' → ');sum.classList.remove('empty')}
+  else{sum.textContent=rt.kind==='referred'?'Tap the body wherever else you feel it.':'Tap the body where the pain travels to.';sum.classList.add('empty')}
+  const add=$r('route-add');add.textContent=rt.tracing?'Done':'Add points';add.classList.toggle('on',rt.tracing);
+  $r('route-undo').disabled=$r('trace-undo').disabled=$r('route-clear').disabled=!rt.points.length;
+  const n=rt.points.length+1;
+  $r('trace-bar').hidden=!rt.tracing;
+  $r('trace-msg').textContent=n>=ROUTE_MAX?`${n} points · the most allowed`:`${rt.kind==='referred'?'Tap where else you feel it':'Tap where it travels'} · ${n} point${n===1?'':'s'}`;
+  $r('route-nudge').hidden=!($r('ftype').value==='shooting'&&!rt.on);
+}
+function refreshRoute(){renderRouteUI();renderMarkers3D()}
+// Tracing: taps on the body add points. On a phone the body scrolls into view so you don't scroll back and forth.
+function setTracing(on){
+  rt.tracing=!!on&&rt.on;refreshRoute();
+  const el=rt.tracing?$r('viewer'):$r('route-panel'),r=el.getBoundingClientRect();
+  if(r.height&&(r.top<0||r.bottom>innerHeight))el.scrollIntoView({behavior:'smooth',block:rt.tracing?'center':'nearest'});
+}
+function resetRoute(){rt.on=false;rt.tracing=false;rt.kind='travels';rt.points=[];refreshRoute()}
+function loadRoute(route){
+  rt.on=!!route;rt.tracing=false;rt.kind=route?route.kind:'travels';
+  rt.points=route?route.points.map(p=>({...p})):[];
+  refreshRoute();
+}
+function addRoutePoint(hit){
+  if(rt.points.length+1>=ROUTE_MAX){toast(`Up to ${ROUTE_MAX} points`);return}
+  const region=detectRegion(hit);if(!region)return;
+  const n=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize():new THREE.Vector3(0,0,1);
+  rt.points.push({point:{x:hit.point.x,y:hit.point.y,z:hit.point.z},normal:{x:n.x,y:n.y,z:n.z},anchor:makeAnchor(hit),regionId:region.id,label:region.label});
+  refreshRoute();
+}
+// Saves through the untouched saveEntry(), then attaches (or removes) the route on that entry.
+function saveRouteEntry(){
+  if(rt.on&&!rt.points.length){toast('Tap at least one more spot, or turn the switch off');setTracing(true);return}
+  const route=rt.on?{kind:rt.kind,points:rt.points.map(p=>({...p}))}:null;
+  const editId=ST.editId,before=new Set(ST.entries.map(e=>e.id));
+  saveEntry();
+  const e=editId?ST.entries.find(x=>x.id===editId):ST.entries.find(x=>!before.has(x.id));
+  if(!e)return;
+  if(route)e.route=route;else delete e.route;
+  save();renderLog();renderSummary();renderMarkers3D();
+}
+$r('route-on').addEventListener('change',e=>{
+  rt.on=e.target.checked;
+  if(rt.on&&!rt.points.length)setTracing(true);else{rt.tracing=false;refreshRoute()}
+});
+$r('route-kind').addEventListener('click',e=>{const b=e.target.closest('.when-chip');if(b){rt.kind=b.dataset.kind;refreshRoute()}});
+$r('route-add').addEventListener('click',()=>setTracing(!rt.tracing));
+$r('route-undo').addEventListener('click',()=>{rt.points.pop();refreshRoute()});
+$r('trace-undo').addEventListener('click',()=>{rt.points.pop();refreshRoute()});
+$r('route-clear').addEventListener('click',()=>{rt.points=[];refreshRoute()});
+$r('trace-done').addEventListener('click',()=>setTracing(false));
+// The bar sits on top of the 3D view: keep its taps from reaching the body underneath.
+['pointerdown','pointerup','click','mousemove','wheel','touchstart','touchmove'].forEach(t=>$r('trace-bar').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+
+/* --- "N entries here" chooser (Markers mode, when a tap lands on more than one marker) --- */
+function closePickMenu(){const m=document.getElementById('pick-menu');if(m)m.hidden=true}
+function openPickMenu(list,x,y){
+  const m=$r('pick-menu'),box=$r('viewer').getBoundingClientRect(),wrap=$r('pick-list');
+  $r('pick-title').textContent=`${list.length} entries here`;
+  wrap.textContent='';
+  [...list].sort((a,b)=>b.severity-a.severity).forEach(e=>{
+    const b=document.createElement('button');b.type='button';b.className='pick-row';
+    const dot=document.createElement('span');dot.className='pick-dot';dot.style.background=sevColor(e.severity);
+    const txt=document.createElement('div'),t=document.createElement('b'),meta=document.createElement('small');
+    t.textContent=e.label+(e.route?routeTail(e):'');
+    meta.textContent=`${e.severity}/10 · ${cap(e.painType)} · ${fmtWhen(e)}`;
+    txt.append(t,meta);b.append(dot,txt);
+    b.addEventListener('click',()=>{closePickMenu();editEntry(e)});
+    wrap.appendChild(b);
+  });
+  m.hidden=false;
+  // Beside the tap, kept inside the 3D view.
+  m.style.left=clamp(x+12,12,box.width-m.offsetWidth-12)+'px';
+  m.style.top=clamp(y-m.offsetHeight/2,12,box.height-m.offsetHeight-12)+'px';
+  wrap.firstChild.focus({preventScroll:true});
+}
+['pointerdown','pointerup','click','mousemove','wheel','touchstart','touchmove'].forEach(t=>$r('pick-menu').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+
 document.getElementById('shape-toggle').addEventListener('click',()=>{
   const btn=document.getElementById('shape-toggle'),panel=document.getElementById('shape-panel');
   panel.hidden=!panel.hidden;
@@ -2001,7 +2555,7 @@ document.getElementById('copybtn').addEventListener('click',()=>{
   try{navigator.clipboard.writeText(body.textContent).then(()=>toast('Summary copied'),fallback)}catch{fallback()}
 });
 document.getElementById('markers-toggle').addEventListener('click',()=>{
-  showMarkers=!showMarkers;
+  showMarkers=!showMarkers;closePickMenu();
   const btn=document.getElementById('markers-toggle');
   btn.classList.toggle('on',showMarkers);
   btn.setAttribute('aria-pressed',String(showMarkers));
@@ -2022,6 +2576,8 @@ document.addEventListener('keydown',e=>{
   if(!document.getElementById('pass-overlay').hidden)closePass(null);
   else if(!document.getElementById('confirm-overlay').hidden)closeConfirm();
   else if(!document.getElementById('hist-overlay').hidden)closeHistory();
+  else if(rt.tracing)setTracing(false);
+  else if(!document.getElementById('pick-menu').hidden)closePickMenu();
 });
 
 /* --- Sync panel --- */
@@ -2361,7 +2917,7 @@ $s('auto-now').addEventListener('click',()=>syncNow());
 $s('auto-change').addEventListener('click',chooseSyncFile);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&auto.enabled)scheduleAutoSync(500)});
 // INIT
-loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();refreshSyncUI();
+loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();when.init();refreshSyncUI();
 if(ST.entries.some(e=>!e.bodyType)){ST.entries.forEach(e=>{if(!e.bodyType)e.bodyType=currentBodyType});save()}
 initScene();
 buildBody();
