@@ -313,8 +313,29 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .sync-nudge span{flex:1 1 220px}
 .sync-nudge-acts{display:flex;align-items:center;gap:6px}
 .sync-nudge .btn-accent{padding:8px 18px;font-size:.8rem;min-height:40px}
+.hist-top{display:none}
+.hist-top span{background:var(--accent);color:#fff;border-radius:20px;padding:1px 8px;font-size:.7rem;min-width:20px;text-align:center}
+/* Phone: logging pain. The model is pinned to the top and the form slides up under it, so the spot you tapped
+   stays in view while you fill it in. While adding route points the form steps aside and the model fills the screen. */
+@media(max-width:860px){
+  .hist-top{display:inline-flex;align-items:center;gap:6px}
+  #hist-wrap{display:none}
+  body.form-open{overflow:hidden}
+  body.form-open .viewer{position:fixed;top:0;left:0;right:0;width:auto;height:40vh;height:40dvh;min-height:0;max-height:none;aspect-ratio:auto;border-radius:0;z-index:84}
+  body.form-open .eform{position:fixed;left:0;right:0;bottom:0;top:40vh;top:40dvh;z-index:85;margin:0;padding:0 18px;border:none;border-radius:22px 22px 0 0;overflow-y:auto;overscroll-behavior:contain;box-shadow:0 -10px 40px rgba(0,0,0,.3);animation:sheetUp .28s var(--ease)}
+  body.form-open .eform-title{position:sticky;top:0;z-index:3;background:var(--surface);padding:18px 0 10px;margin-bottom:8px}
+  body.form-open .eform-title::before{content:"";position:absolute;top:7px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--border)}
+  body.form-open .eform .factions{position:sticky;bottom:0;z-index:3;flex-direction:row;background:var(--surface);margin-top:14px;padding:12px 0 calc(14px + env(safe-area-inset-bottom,0px))}
+  body.form-open .eform .factions button{flex:1;width:auto}
+  body.form-open.tracing .eform{display:none}
+  body.form-open.tracing .viewer{height:100vh;height:100dvh}
+  body.form-open.tracing .trace-bar:not([hidden]){bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+}
+@media(prefers-reduced-motion:reduce){body.form-open .eform{animation:none}}
 /* Touch screens: bigger targets for the sliders and steppers */
 @media(pointer:coarse){
+  /* iPhone zooms the whole page in when you tap a field whose text is under 16px, and it stays zoomed */
+  input,select,textarea{font-size:16px !important}
   .step-btn{width:44px;height:44px;font-size:1.3rem}
   .sev-track{height:14px;border-radius:7px}
   .sev-fill{border-radius:7px}
@@ -348,6 +369,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <h1>Body Pain Tracker</h1>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="neu-pill hist-top" id="hist-btn-top" title="Pain history">History <span id="pct-badge-top">0</span></button>
     <button class="neu-pill" id="settings-btn" title="Body model, height, weight and shape">Body settings</button>
     <button class="neu-pill" id="body-toggle" title="Switch body model">Male</button>
     <button class="neu-pill" id="clear-btn">Clear All</button>
@@ -504,7 +526,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
       </div>
       <div class="factions"><button class="btn-accent" id="fsave">Save Entry</button><button class="btn-ghost" id="fcancel">Cancel</button></div>
     </div>
-    <div style="padding-top:12px">
+    <div style="padding-top:12px" id="hist-wrap">
       <button class="neu-pill" id="hist-btn" style="width:100%;justify-content:center;gap:8px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Pain History <span id="pct-badge" style="background:var(--accent);color:#fff;border-radius:20px;padding:1px 8px;font-size:.7rem;min-width:20px;text-align:center">0</span>
@@ -1305,7 +1327,8 @@ function surfaceLine(p,q){
   const pos=g.geo.attributes.position,nor=g.geo.attributes.normal,idx=g.geo.index?g.geo.index.array:null;
   const m=bodyMesh.matrixWorld,inv=new THREE.Matrix4().copy(m).invert();
   const sc=new THREE.Vector3().setFromMatrixScale(m).x||1;   // mesh units → world units
-  const liftEnd=w=>w.point.clone().addScaledVector(w.normal.clone().normalize(),ROUTE_LIFT);
+  // each point carries its surface normal (.n) so arrows can lie flat on the skin anywhere along the line
+  const liftEnd=w=>{const nn=w.normal.clone().normalize(),v=w.point.clone().addScaledVector(nn,ROUTE_LIFT);v.n=nn;return v};
   const path=surfacePath(va,vb);
   let out;
   if(!path){
@@ -1368,7 +1391,9 @@ function surfaceLine(p,q){
         if(sm.lengthSq()>1e-8)n.copy(sm.normalize());
       }
       const world=pt.v.clone().applyMatrix4(m);
-      return world.addScaledVector(n.transformDirection(m),ROUTE_LIFT);
+      n.transformDirection(m);
+      world.addScaledVector(n,ROUTE_LIFT);world.n=n.clone();
+      return world;
     });
   }
   const clean=out.filter((pt,i)=>i===0||pt.distanceTo(out[i-1])>0.05);
@@ -1393,58 +1418,94 @@ function routeTube(pts,radius,color,alphaAt,order,from,total){
 }
 
 // Draws a route into group g. spots[0] is the starting spot (its marker is drawn elsewhere).
-// travels: one line through the spots in order, strongest at the start, arrow at the end.
-// referred: a dashed ring on each other spot and no line, so it can't read as pain that shot there.
+// travels:  one solid line through the spots in order, with arrowheads along it and at every stop, so the
+//           direction the pain moves is obvious.
+// referred: ("also felt at") each other spot is its own dashed-ring node, tied back to the main spot by a thin
+//           dashed link with no arrows: connected, but clearly not pain that travelled there.
 // entryId set = saved entry (clickable); unset = the draft being traced.
+const ARROW_GAP=6.5;
 function drawRoute(g,spots,kind,hex,entryId){
   if(!getRouteGraph()||spots.length<2)return;
   const color=new THREE.Color(hex),dark=new THREE.Color(0x061018);
-  const pairs=kind==='referred'?[]:spots.slice(1).map((q,i)=>[spots[i],q]);
-  const lines=pairs.map(([p,q])=>surfaceLine(p,q));
-  const lens=lines.map(l=>new THREE.CatmullRomCurve3(l,false,'centripetal').getLength());
-  const total=lens.reduce((s,l)=>s+l,0)||1;
-  const fade=(d,t)=>lerp(1,0.35,clamp(d/t,0,1));
-  let from=0;
-  lines.forEach((l,i)=>{
-    const off=from,tot=total;
-    g.add(routeTube(l,ROUTE_R*1.8,dark,(d,t)=>fade(d,t)*0.55,1,off,tot));   // dark edge keeps it readable on any skin tone
-    const tube=routeTube(l,ROUTE_R,color,fade,2,off,tot);
-    g.add(tube);
-    if(entryId){tube.userData.entryId=entryId;tube.userData.pick='line';pinHitMeshes.push(tube)}
-    from+=lens[i];
-  });
+  const solid=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35});
+  const arrowFill=new THREE.MeshBasicMaterial({color:color.clone().lerp(new THREE.Color(0xffffff),0.82),toneMapped:false});
+  const arrowEdge=new THREE.MeshBasicMaterial({color:dark,toneMapped:false});
+  const pickable=(m,pick)=>{if(entryId){m.userData.entryId=entryId;m.userData.pick=pick;pinHitMeshes.push(m)}};
   const stud=(pt,n,r)=>{
-    const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35}));
-    s.position.copy(pt).addScaledVector(n,0.3);g.add(s);return s;
+    const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),solid);
+    m.position.copy(pt).addScaledVector(n,0.3);g.add(m);return m;
   };
-  spots.slice(1).forEach((p,i)=>{
-    const w=entryWorld(p),n=w.normal.clone().normalize(),last=i===spots.length-2;
-    if(kind==='referred'){
+  // Arrowhead lying flat against the skin: pointing along the surface and squashed along its normal, so it
+  // rests on the body instead of half of it sinking in.
+  const arrow=(tip,dirIn,n,r,h)=>{
+    const dir=dirIn.clone();
+    dir.addScaledVector(n,-dir.dot(n));
+    if(dir.lengthSq()<1e-6)dir.set(n.y,n.z,n.x).addScaledVector(n,-(n.y*n.x+n.z*n.y+n.x*n.z));
+    dir.normalize();
+    const side=new THREE.Vector3().crossVectors(dir,n).normalize();
+    // Light arrowhead on a dark backing, sitting just above the line so the line can't hide it
+    const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,dir,n));
+    const mk=(mat,k,lift)=>{
+      const c=new THREE.Mesh(new THREE.ConeGeometry(r*k,h*k,16),mat);
+      c.quaternion.copy(q);c.scale.set(1,1,0.45);
+      c.position.copy(tip).addScaledVector(dir,-h/2).addScaledVector(n,lift);
+      g.add(c);return c;
+    };
+    mk(arrowEdge,1.32,ROUTE_R*0.7);
+    return mk(arrowFill,1,ROUTE_R*1.1);
+  };
+  const hitSphere=(w,n,p)=>{
+    if(!entryId)return;
+    const hit=new THREE.Mesh(new THREE.SphereGeometry(2,10,8),new THREE.MeshBasicMaterial({visible:false}));
+    hit.position.copy(w.point).addScaledVector(n,0.8);hit.userData.entryId=entryId;hit.userData.pick='point';
+    if(kind==='referred')hit.userData.also=p.label;
+    g.add(hit);pinHitMeshes.push(hit);
+  };
+
+  if(kind==='referred'){
+    const dash=d=>(d%2.4)<1.2;
+    spots.slice(1).forEach(p=>{
+      const l=surfaceLine(spots[0],p);
+      g.add(routeTube(l,ROUTE_R*1.5,dark,d=>dash(d)?0.45:0,1,0,1));
+      const link=routeTube(l,ROUTE_R*0.75,color,d=>dash(d)?0.9:0,2,0,1);
+      g.add(link);pickable(link,'line');
+      const w=entryWorld(p),n=w.normal.clone().normalize();
       g.add(makeDecal(w.mesh||allMeshes[0],w.point,n,5.5,markerTex(hex,{dash:true})));
       stud(w.point,n,0.8);
-    }else if(last){
-      // Arrowhead lying along the last stretch of the line, tip on the final spot.
-      const l=lines[lines.length-1],tip=l[l.length-1],back=l[Math.max(0,l.length-4)];
-      // Kept flat against the skin: pointing along the surface and squashed along its normal, so the
-      // arrowhead rests on the body instead of half of it sinking in.
-      const dir=tip.clone().sub(back);
-      dir.addScaledVector(n,-dir.dot(n));
-      if(dir.lengthSq()<1e-6)dir.set(n.y,n.z,n.x).addScaledVector(n,-(n.y*n.x+n.z*n.y+n.x*n.z));
-      dir.normalize();
-      const side=new THREE.Vector3().crossVectors(dir,n).normalize();
-      const cone=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.4,16),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35}));
-      cone.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,dir,n));
-      cone.scale.set(1,1,0.5);
-      cone.position.copy(tip).addScaledVector(dir,-1.2);
-      g.add(cone);
-      if(entryId){cone.userData.entryId=entryId;cone.userData.pick='line';pinHitMeshes.push(cone)}
-    }else stud(w.point,n,0.7);
-    if(entryId){
-      const hit=new THREE.Mesh(new THREE.SphereGeometry(2,10,8),new THREE.MeshBasicMaterial({visible:false}));
-      hit.position.copy(w.point).addScaledVector(n,0.8);hit.userData.entryId=entryId;hit.userData.pick='point';
-      if(kind==='referred')hit.userData.also=p.label;
-      g.add(hit);pinHitMeshes.push(hit);
+      hitSphere(w,n,p);
+    });
+    return;
+  }
+
+  const lines=spots.slice(1).map((q,i)=>surfaceLine(spots[i],q));
+  const lens=lines.map(l=>new THREE.CatmullRomCurve3(l,false,'centripetal').getLength());
+  const total=lens.reduce((a,l)=>a+l,0)||1;
+  const fade=(d,t)=>lerp(1,0.45,clamp(d/t,0,1));
+  let from=0;
+  lines.forEach((l,i)=>{
+    g.add(routeTube(l,ROUTE_R*1.8,dark,(d,t)=>fade(d,t)*0.55,1,from,total));   // dark edge keeps it readable on any skin tone
+    const tube=routeTube(l,ROUTE_R,color,fade,2,from,total);
+    g.add(tube);pickable(tube,'line');
+    from+=lens[i];
+    // Arrowheads along the stretch, all pointing the way the pain moves
+    let run=0,next=ARROW_GAP*0.55,len=0;
+    for(let k=1;k<l.length;k++)len+=l[k].distanceTo(l[k-1]);
+    for(let k=1;k<l.length;k++){
+      const seg=l[k].distanceTo(l[k-1]);
+      while(run+seg>=next&&next<len-3.4){
+        const t=(next-run)/seg,pos=l[k-1].clone().lerp(l[k],t);
+        const n=(l[k].n||l[k-1].n||new THREE.Vector3(0,0,1)).clone().normalize();
+        const dir=l[Math.min(l.length-1,k+1)].clone().sub(l[Math.max(0,k-2)]);
+        arrow(pos.addScaledVector(dir.clone().normalize(),1.1),dir,n,1.0,2.2);
+        next+=ARROW_GAP;
+      }
+      run+=seg;
     }
+    // A bigger arrowhead arriving at each stop
+    const w=entryWorld(spots[i+1]),n=w.normal.clone().normalize();
+    const tip=l[l.length-1],back=l[Math.max(0,l.length-4)];
+    pickable(arrow(tip,tip.clone().sub(back),n,1.35,3.0),'line');
+    hitSphere(w,n,spots[i+1]);
   });
 }
 
@@ -1892,6 +1953,9 @@ function fitCamera(){
   dist=clamp(dist,minDist,maxDist);
   updateCamera();
 }
+
+// Back to the framed view (used when the model moves between the page and the settings panel)
+function resetZoom(){userZoomed=false;fitCamera()}
 
 function updateCamera(){
   // Fully zoomed out the aim is the frame's centre (feet planted); zooming in drifts it to the body's own centre.
@@ -2358,7 +2422,13 @@ function openForm(label,viewName){
   document.getElementById('fnotes').value='';
   when.start();
   document.getElementById('fsave').textContent='Save Entry';
+  form.scrollTop=0;syncFormSheet();
   form.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+// On a phone the open form is a sheet under the pinned model (CSS, see body.form-open)
+function syncFormSheet(){
+  document.body.classList.toggle('form-open',!document.getElementById('eform').hidden);
+  document.body.classList.toggle('tracing',!!rt.tracing);
 }
 
 function editEntry(entry){
@@ -2374,10 +2444,11 @@ function editEntry(entry){
   document.getElementById('fnotes').value=entry.notes;
   when.load(entry.date,entry.timeApprox);
   document.getElementById('fsave').textContent='Update Entry';
+  form.scrollTop=0;syncFormSheet();
   form.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-function closeForm(){ST.clickPt=null;ST.editId=null;clearPreviewPin();dtp.close();document.getElementById('eform').hidden=true;resetRoute()}
+function closeForm(){ST.clickPt=null;ST.editId=null;clearPreviewPin();dtp.close();document.getElementById('eform').hidden=true;resetRoute();syncFormSheet()}
 
 function saveEntry(){
   const loc=document.getElementById('floc').value;
@@ -2446,6 +2517,7 @@ function renderLog(){
   if(ST.filter==='resolved')ents=ents.filter(e=>e.resolved);
   const badge=document.getElementById('pct-badge');
   if(badge)badge.textContent=ST.entries.length;
+  document.getElementById('pct-badge-top').textContent=ST.entries.length;
   updateBodyToggle();
   if(!ents.length){list.innerHTML='<div class="empty">No entries match this filter.</div>';return}
   list.innerHTML=ents.map(e=>`
@@ -2937,6 +3009,7 @@ function renderRouteUI(){
   $r('trace-bar').hidden=!rt.tracing;
   $r('trace-msg').textContent=n>=ROUTE_MAX?`${n} points · the most allowed`:`${rt.kind==='referred'?'Tap where else you feel it':'Tap where it travels'} · ${n} point${n===1?'':'s'}`;
   $r('route-nudge').hidden=!($r('ftype').value==='shooting'&&!rt.on);
+  syncFormSheet();
 }
 function refreshRoute(){renderRouteUI();renderMarkers3D()}
 // Tracing: taps on the body add points. On a phone the body scrolls into view so you don't scroll back and forth.
@@ -3052,6 +3125,7 @@ function closeHistory(refocus=true){
   if(refocus)document.getElementById('hist-btn').focus();
 }
 document.getElementById('hist-btn').addEventListener('click',openHistory);
+document.getElementById('hist-btn-top').addEventListener('click',openHistory);
 document.getElementById('hist-close').addEventListener('click',()=>closeHistory());
 document.getElementById('hist-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeHistory()});
 document.addEventListener('keydown',e=>{
@@ -3487,6 +3561,7 @@ animate();
   function close(){
     ov.hidden=true;setupOpen=false;mode=null;setShapePanel(false);
     if(home)home.parent.insertBefore(viewer,home.next);
+    resetZoom();
     holder.appendChild(prof);
     try{localStorage.setItem(KEY,'1')}catch{}
     closePickMenu();
