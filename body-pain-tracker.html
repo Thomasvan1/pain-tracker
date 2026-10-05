@@ -82,6 +82,17 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .param input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:var(--neu-soft);cursor:pointer;border:2px solid var(--surface)}
 .diag{padding:20px}
 .vtabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.mfilter{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:-4px 0 14px}
+.mfilter[hidden]{display:none}
+.mf-row{display:flex;flex-wrap:wrap;gap:6px}
+.mf-types{position:relative}
+.mf-types summary{list-style:none}
+.mf-types summary::-webkit-details-marker{display:none}
+.mf-types[open] summary,.mf-types.some summary{background:var(--accent);color:var(--on-accent)}
+.mf-type-list{position:absolute;z-index:6;top:calc(100% + 6px);left:0;display:grid;grid-template-columns:repeat(2,minmax(124px,1fr));gap:2px 14px;max-height:260px;overflow:auto;padding:10px 12px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--neu-soft)}
+.mf-type-list label{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--text);min-height:32px;cursor:pointer}
+.mf-count{font-size:.74rem;color:var(--text-sec)}
+.mf-count button{border:none;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0 0 0 6px;text-decoration:underline}
 .viewer{position:relative;width:100%;aspect-ratio:3/4;min-height:400px;max-height:600px;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--neu-in);cursor:grab;touch-action:none}
 .viewer:active{cursor:grabbing}
 .viewer canvas{display:block}
@@ -267,6 +278,11 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hist-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s var(--ease)}
 .hist-overlay[hidden]{display:none}
+.welcome h2{font-size:1.2rem;font-weight:700;margin-bottom:8px}
+.welcome-sub{font-size:.86rem;color:var(--text-sec);line-height:1.6;margin-bottom:16px}
+.welcome-lbl{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.welcome-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.welcome-note{font-size:.74rem;color:var(--text-muted);line-height:1.5;margin-top:14px}
 .hist-panel{width:100%;max-width:560px;max-height:85vh;overflow-y:auto;padding:24px}
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -322,6 +338,16 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="4 3"/></svg>
         Markers
       </button>
+    </div>
+    <div class="mfilter" id="mfilter" hidden>
+      <div class="mf-row" id="mf-range" role="group" aria-label="Show entries from the last">
+        <button type="button" class="when-chip" data-r="7">7 days</button><button type="button" class="when-chip" data-r="30">30 days</button><button type="button" class="when-chip" data-r="90">90 days</button><button type="button" class="when-chip" data-r="365">1 year</button><button type="button" class="when-chip" data-r="0">All</button>
+      </div>
+      <div class="mf-row" id="mf-sev" role="group" aria-label="Minimum severity">
+        <button type="button" class="when-chip" data-s="1">Any severity</button><button type="button" class="when-chip" data-s="4">4+</button><button type="button" class="when-chip" data-s="7">7+</button>
+      </div>
+      <details class="mf-types" id="mf-types"><summary class="when-chip">Types</summary><div class="mf-type-list" id="mf-type-list"></div></details>
+      <span class="mf-count" id="mf-count" aria-live="polite"></span>
     </div>
     <div class="viewer" id="viewer">
       <div class="pick-menu" id="pick-menu" role="dialog" aria-label="Entries at this spot" hidden>
@@ -505,6 +531,27 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <label class="pass-check" id="pass-remember-wrap"><input type="checkbox" id="pass-remember" checked> Remember on this device</label>
     <p class="pass-err" id="pass-err" role="alert"></p>
     <div class="factions"><button type="submit" class="btn-accent" id="pass-ok">Continue</button><button type="button" class="btn-ghost" id="pass-cancel">Cancel</button></div>
+  </form>
+</div>
+<!-- WELCOME (first run) — self-contained: this block, the .welcome CSS and the WELCOME script section.
+     It only fills in the same fields as Body Parameters, so it can be deleted or moved without touching anything else. -->
+<div class="hist-overlay" id="welcome-overlay" hidden>
+  <form class="hist-panel neu confirm-panel welcome" id="welcome-form" role="dialog" aria-modal="true" aria-labelledby="welcome-title" novalidate>
+    <h2 id="welcome-title">Welcome to Body Pain Tracker</h2>
+    <p class="welcome-sub">Set up the body you'll mark pain on. Everything here is optional and can be changed later under Body Parameters.</p>
+    <span class="welcome-lbl" id="welcome-body-lbl">Body model</span>
+    <div class="when-row" id="welcome-body" role="group" aria-labelledby="welcome-body-lbl">
+      <button type="button" class="when-chip" data-b="male" aria-pressed="true">Male</button>
+      <button type="button" class="when-chip" data-b="female" aria-pressed="false">Female</button>
+    </div>
+    <div class="welcome-grid">
+      <div class="pf"><label for="w-ht-ft">Height (ft)</label><input type="number" id="w-ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
+      <div class="pf"><label for="w-ht-in">Height (in)</label><input type="number" id="w-ht-in" placeholder="e.g. 10" min="0" max="11"></div>
+      <div class="pf"><label for="w-wt">Weight (lbs)</label><input type="number" id="w-wt" placeholder="e.g. 170" min="60" max="1000"></div>
+      <div class="pf"><label for="w-age">Age</label><input type="number" id="w-age" placeholder="e.g. 30" min="1" max="120"></div>
+    </div>
+    <p class="welcome-note">Stored only in this browser. The body model locks once you log your first entry.</p>
+    <div class="factions"><button type="submit" class="btn-accent" id="welcome-start">Start</button><button type="button" class="btn-ghost" id="welcome-skip">Skip for now</button></div>
   </form>
 </div>
 <div class="toast" id="toast"></div>
@@ -904,6 +951,21 @@ function entryWorld(e){
 function bodyEntries(){return ST.entries.filter(e=>e.bodyType===currentBodyType)}
 function activeBodyEntries(){return bodyEntries().filter(e=>!e.resolved)}
 
+/* Marker filter: keeps old entries from cluttering the model. Per-device view setting (never synced).
+   Entries that don't pass stay on the body as faint rings, so it's clear something is hidden. */
+const MF={range:30,minSev:1,hideTypes:new Set()};
+try{const d=JSON.parse(localStorage.getItem('bpt_mfilter'));if(d){
+  if([0,7,30,90,365].includes(d.range))MF.range=d.range;
+  if([1,4,7].includes(d.minSev))MF.minSev=d.minSev;
+  if(Array.isArray(d.hideTypes))d.hideTypes.forEach(t=>{if(typeof t==='string')MF.hideTypes.add(t)});
+}}catch{}
+function saveMF(){try{localStorage.setItem('bpt_mfilter',JSON.stringify({range:MF.range,minSev:MF.minSev,hideTypes:[...MF.hideTypes]}))}catch{}}
+function passesFilter(e){
+  if(MF.range){const t=new Date(e.date).getTime();if(!isNaN(t)&&t<Date.now()-MF.range*864e5)return false}
+  return e.severity>=MF.minSev&&!MF.hideTypes.has(e.painType);
+}
+function shownEntries(){return activeBodyEntries().filter(passesFilter)}
+
 let pinHitMeshes=[];
 
 const PREVIEW_HEX='#22D3EE',PREVIEW_SIZE=7,MARKER_SIZE=6.5;
@@ -911,8 +973,8 @@ function sevHex(s){return s<=3?'#34D399':s<=6?'#FBBF24':'#F43F5E'}
 
 // Dark outline under every ring keeps it readable on any skin tone.
 const texCache={};
-function markerTex(hex,{dot=false,fill=false}={}){
-  const key=hex+dot+fill;
+function markerTex(hex,{dot=false,fill=false,dash=false}={}){
+  const key=hex+dot+fill+dash;
   if(texCache[key])return texCache[key];
   const S=256,m=S/2,R=m*0.68,TAU=Math.PI*2;
   const c=document.createElement('canvas');c.width=c.height=S;
@@ -923,7 +985,9 @@ function markerTex(hex,{dot=false,fill=false}={}){
     x.fillStyle=gr;x.beginPath();x.arc(m,m,R,0,TAU);x.fill();
   }
   x.strokeStyle='rgba(6,16,24,0.78)';x.lineWidth=S*0.095;x.beginPath();x.arc(m,m,R,0,TAU);x.stroke();
-  x.strokeStyle=hex;x.lineWidth=S*0.05;x.beginPath();x.arc(m,m,R,0,TAU);x.stroke();
+  x.strokeStyle=hex;x.lineWidth=S*0.05;
+  if(dash)x.setLineDash([S*0.075,S*0.055]);   // dashed ring = "also felt here", not a main spot
+  x.beginPath();x.arc(m,m,R,0,TAU);x.stroke();x.setLineDash([]);
   if(dot){
     x.fillStyle='rgba(6,16,24,0.78)';x.beginPath();x.arc(m,m,S*0.07,0,TAU);x.fill();
     x.fillStyle=hex;x.beginPath();x.arc(m,m,S*0.042,0,TAU);x.fill();
@@ -957,7 +1021,7 @@ function pickEntries(){
   let list=[...found].map(([id,r])=>({e:ST.entries.find(x=>x.id===id),r})).filter(x=>x.e);
   if(!list.length&&body){
     // Near miss: the closest marker facing the viewer (never one through the body, never a route point).
-    const near=activeBodyEntries().map(e=>({e,w:entryWorld(e)})).filter(x=>x.w.normal.dot(ray.direction)<0)
+    const near=shownEntries().map(e=>({e,w:entryWorld(e)})).filter(x=>x.w.normal.dot(ray.direction)<0)
       .map(x=>({e:x.e,d:x.w.point.distanceTo(body.point)})).filter(x=>x.d<12).sort((a,b)=>a.d-b.d);
     if(near.length)list=[{e:near[0].e,r:3}];
   }
@@ -968,7 +1032,7 @@ function pickEntries(){
   // Markers: the one nearest the tap, plus any stacked on (almost) the same spot — the same markers
   // that get a count badge. Markers that are merely close by don't trigger the chooser.
   const lead=list.map(x=>({e:x.e,p:entryWorld(x.e).point})).sort((a,b)=>ray.distanceToPoint(a.p)-ray.distanceToPoint(b.p))[0];
-  return activeBodyEntries().map(e=>({e,p:entryWorld(e).point})).filter(x=>x.p.distanceTo(lead.p)<STACK_DIST)
+  return shownEntries().map(e=>({e,p:entryWorld(e).point})).filter(x=>x.p.distanceTo(lead.p)<STACK_DIST)
     .sort((a,b)=>(a.e===lead.e?-1:b.e===lead.e?1:0)).map(x=>({e:x.e,r:top}));
 }
 
@@ -982,6 +1046,7 @@ function renderMarkers3D(){
   painPins.length=0;
   pinHitMeshes=[];
   drawRoutePreview();   // the route being traced shows even with Markers off, like the preview pin
+  updateMarkerFilterUI();
   if(!showMarkers)return;
   bodyGroup.updateMatrixWorld(true);
   activeBodyEntries().forEach(e=>{
@@ -989,6 +1054,12 @@ function renderMarkers3D(){
     const w=entryWorld(e),n=w.normal.normalize();
     const g=new THREE.Group();
     g.userData={isPainPin:true,entryId:e.id};
+    if(!passesFilter(e)){
+      // Filtered out: a faint ring only. Not clickable, no route, no pulse.
+      const ghost=makeDecal(w.mesh||allMeshes[0],w.point,n,MARKER_SIZE*0.75,markerTex(hex));
+      ghost.material.opacity=0.28;ghost.renderOrder=1;
+      g.add(ghost);bodyGroup.add(g);return;
+    }
 
     const halo=makeDecal(w.mesh||allMeshes[0],w.point,n,MARKER_SIZE,markerTex(hex,{fill:true}));
     halo.renderOrder=3;   // above route lines, so a single spot on a route still reads as its own marker
@@ -1027,7 +1098,7 @@ function stackTex(n){
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return texCache[key]=t;
 }
 function drawStackBadges(){
-  const act=activeBodyEntries().map(e=>({e,w:entryWorld(e)})),used=new Set();
+  const act=shownEntries().map(e=>({e,w:entryWorld(e)})),used=new Set();
   act.forEach(a=>{
     if(used.has(a.e.id))return;
     const grp=act.filter(b=>!used.has(b.e.id)&&b.w.point.distanceTo(a.w.point)<STACK_DIST);
@@ -1207,22 +1278,21 @@ function routeTube(pts,radius,color,alphaAt,order,from,total){
 
 // Draws a route into group g. spots[0] is the starting spot (its marker is drawn elsewhere).
 // travels: one line through the spots in order, strongest at the start, arrow at the end.
-// referred: a dashed line from the starting spot to each other spot, with a ring on each.
+// referred: a dashed ring on each other spot and no line, so it can't read as pain that shot there.
 // entryId set = saved entry (clickable); unset = the draft being traced.
 function drawRoute(g,spots,kind,hex,entryId){
   if(!getRouteGraph()||spots.length<2)return;
   const color=new THREE.Color(hex),dark=new THREE.Color(0x061018);
-  const pairs=kind==='referred'?spots.slice(1).map(q=>[spots[0],q]):spots.slice(1).map((q,i)=>[spots[i],q]);
+  const pairs=kind==='referred'?[]:spots.slice(1).map((q,i)=>[spots[i],q]);
   const lines=pairs.map(([p,q])=>surfaceLine(p,q));
   const lens=lines.map(l=>new THREE.CatmullRomCurve3(l,false,'centripetal').getLength());
   const total=lens.reduce((s,l)=>s+l,0)||1;
   const fade=(d,t)=>lerp(1,0.35,clamp(d/t,0,1));
-  const dash=d=>(d%2.6)<1.6?0.95:0;
   let from=0;
   lines.forEach((l,i)=>{
-    const f=kind==='referred'?dash:fade,off=kind==='referred'?0:from,tot=kind==='referred'?lens[i]:total;
-    g.add(routeTube(l,ROUTE_R*1.8,dark,(d,t)=>f(d,t)*0.55,1,off,tot));   // dark edge keeps it readable on any skin tone
-    const tube=routeTube(l,ROUTE_R,color,f,2,off,tot);
+    const off=from,tot=total;
+    g.add(routeTube(l,ROUTE_R*1.8,dark,(d,t)=>fade(d,t)*0.55,1,off,tot));   // dark edge keeps it readable on any skin tone
+    const tube=routeTube(l,ROUTE_R,color,fade,2,off,tot);
     g.add(tube);
     if(entryId){tube.userData.entryId=entryId;tube.userData.pick='line';pinHitMeshes.push(tube)}
     from+=lens[i];
@@ -1234,7 +1304,7 @@ function drawRoute(g,spots,kind,hex,entryId){
   spots.slice(1).forEach((p,i)=>{
     const w=entryWorld(p),n=w.normal.clone().normalize(),last=i===spots.length-2;
     if(kind==='referred'){
-      g.add(makeDecal(w.mesh||allMeshes[0],w.point,n,5.5,markerTex(hex)));
+      g.add(makeDecal(w.mesh||allMeshes[0],w.point,n,5.5,markerTex(hex,{dash:true})));
       stud(w.point,n,0.8);
     }else if(last){
       // Arrowhead lying along the last stretch of the line, tip on the final spot.
@@ -1256,6 +1326,7 @@ function drawRoute(g,spots,kind,hex,entryId){
     if(entryId){
       const hit=new THREE.Mesh(new THREE.SphereGeometry(2,10,8),new THREE.MeshBasicMaterial({visible:false}));
       hit.position.copy(w.point).addScaledVector(n,0.8);hit.userData.entryId=entryId;hit.userData.pick='point';
+      if(kind==='referred')hit.userData.also=p.label;
       g.add(hit);pinHitMeshes.push(hit);
     }
   });
@@ -1275,6 +1346,38 @@ function drawRoutePreview(){
   drawRoute(g,[o,...rt.points],rt.kind,PREVIEW_HEX);
   bodyGroup.add(g);
 }
+
+// Filter bar: only meaningful while Markers is on and there is something to filter.
+function updateMarkerFilterUI(){
+  const bar=document.getElementById('mfilter');if(!bar)return;
+  const all=activeBodyEntries();
+  bar.hidden=!showMarkers||!all.length;
+  if(bar.hidden)return;
+  bar.querySelectorAll('#mf-range [data-r]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.r===MF.range)));
+  bar.querySelectorAll('#mf-sev [data-s]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===MF.minSev)));
+  const list=document.getElementById('mf-type-list');
+  if(!list.children.length){
+    [...document.querySelectorAll('#ftype option')].forEach(o=>{
+      const l=document.createElement('label'),c=document.createElement('input');
+      c.type='checkbox';c.value=o.value;
+      c.addEventListener('change',()=>{c.checked?MF.hideTypes.delete(o.value):MF.hideTypes.add(o.value);saveMF();renderMarkers3D()});
+      l.append(c,document.createTextNode(o.textContent.replace(/ \(.*\)$/,'')));list.appendChild(l);
+    });
+  }
+  list.querySelectorAll('input').forEach(c=>{c.checked=!MF.hideTypes.has(c.value)});
+  document.getElementById('mf-types').classList.toggle('some',MF.hideTypes.size>0);
+  const hidden=all.length-all.filter(passesFilter).length,cnt=document.getElementById('mf-count');
+  cnt.textContent=hidden?`${hidden} hidden`:`${all.length} shown`;
+  if(hidden){
+    const b=document.createElement('button');b.type='button';b.textContent='Show all';
+    b.addEventListener('click',()=>{MF.range=0;MF.minSev=1;MF.hideTypes.clear();saveMF();renderMarkers3D()});
+    cnt.appendChild(b);
+  }
+}
+document.getElementById('mf-range').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;MF.range=+b.dataset.r;saveMF();renderMarkers3D()});
+document.getElementById('mf-sev').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;MF.minSev=+b.dataset.s;saveMF();renderMarkers3D()});
+document.addEventListener('click',e=>{const d=document.getElementById('mf-types');if(d.open&&!d.contains(e.target))d.open=false});
+document.addEventListener('keydown',e=>{const d=document.getElementById('mf-types');if(e.key==='Escape'&&d.open){d.open=false;d.querySelector('summary').focus()}});
 
 /* ═══════════════════════════════════════════
    PREVIEW MARKER (shown before saving)
@@ -1663,8 +1766,15 @@ function setupControls(el){
 
     if(showMarkers){
       const picks=pickEntries();
-      if(picks.length){hint.textContent=picks.length>1?`${picks.length} entries here — click to choose`:picks[0].e.label+' — click to view';hint.classList.add('active');el.style.cursor='pointer';return}
-      hint.textContent=activeBodyEntries().length?HINT_MARKERS:'No active markers on this body · Turn Markers off to log new pain';
+      if(picks.length){
+        let txt=picks.length>1?`${picks.length} entries here — click to choose`:picks[0].e.label+' — click to view';
+        if(picks.length===1){
+          const ah=raycaster.intersectObjects(pinHitMeshes,false).find(h=>h.object.userData.also&&h.object.userData.entryId===picks[0].e.id);
+          if(ah)txt=`${picks[0].e.label} — also felt at ${ah.object.userData.also} · click to view`;
+        }
+        hint.textContent=txt;hint.classList.add('active');el.style.cursor='pointer';return;
+      }
+      hint.textContent=shownEntries().length?HINT_MARKERS:activeBodyEntries().length?'No markers match the filter · Change it above to see more':'No active markers on this body · Turn Markers off to log new pain';
       hint.classList.remove('active');
       el.style.cursor='grab';
       return;
@@ -3024,6 +3134,34 @@ buildBody();
 updateCamera();
 renderLog();renderSummary();
 animate();
+/* ═══════════════════════════════════════════
+   WELCOME (first run) — self-contained, see the markup comment
+   ═══════════════════════════════════════════ */
+// Shown once, only on a device with no profile and no entries. It writes into the Body Parameters
+// fields and lets the normal handlers save, so it adds no data of its own beyond the "seen" flag.
+(function(){
+  const ov=document.getElementById('welcome-overlay'),KEY='bpt_welcomed';
+  let seen=false,hasProfile=false;
+  try{seen=!!localStorage.getItem(KEY);hasProfile=!!localStorage.getItem('bpt_profile')}catch{seen=true}
+  if(seen||hasProfile||ST.entries.length)return;
+  let pick=currentBodyType;
+  const chips=document.querySelectorAll('#welcome-body .when-chip');
+  const sync=()=>chips.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.b===pick)));
+  document.getElementById('welcome-body').addEventListener('click',e=>{const b=e.target.closest('.when-chip');if(b){pick=b.dataset.b;sync()}});
+  const close=()=>{try{localStorage.setItem(KEY,'1')}catch{}ov.hidden=true};
+  document.getElementById('welcome-form').addEventListener('submit',e=>{
+    e.preventDefault();
+    [['w-ht-ft','ht-ft'],['w-ht-in','ht-in'],['w-wt','wt'],['w-age','age']].forEach(([from,to])=>{document.getElementById(to).value=document.getElementById(from).value});
+    close();
+    if(pick!==currentBodyType)switchBodyType();
+    applyMeasurements();
+  });
+  document.getElementById('welcome-skip').addEventListener('click',close);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden)close()});
+  sync();ov.hidden=false;
+  document.getElementById('w-ht-ft').focus();
+})();
+
 // Ask the sync extension (if installed) to say hello; its content script may attach a moment later.
 window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET);
 setTimeout(()=>{if(!ext.present)window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET)},1000);
