@@ -278,11 +278,20 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hist-overlay{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s var(--ease)}
 .hist-overlay[hidden]{display:none}
-.welcome h2{font-size:1.2rem;font-weight:700;margin-bottom:8px}
-.welcome-sub{font-size:.86rem;color:var(--text-sec);line-height:1.6;margin-bottom:16px}
+.welcome-sub{font-size:.86rem;color:var(--text-sec);line-height:1.6;margin-bottom:16px;max-width:70ch}
 .welcome-lbl{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
-.welcome-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
-.welcome-note{font-size:.74rem;color:var(--text-muted);line-height:1.5;margin-top:14px}
+.welcome-note{font-size:.74rem;color:var(--text-muted);line-height:1.5;margin:4px 0 12px}
+.setup{position:relative;max-width:960px}
+.setup h2{font-size:1.2rem;font-weight:700;margin-bottom:8px;padding-right:36px}
+.setup-x{position:absolute;top:16px;right:16px}
+.setup-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.setup-view .viewer{min-height:320px;max-height:520px}
+.setup-form .profile{padding:0;margin:0;background:none;box-shadow:none;border:none}
+.setup-form .profile>h3{display:none}
+.setup-err{min-height:1.2em;font-size:.8rem;font-weight:600;color:var(--red);margin:10px 0 0}
+.pf input.invalid{box-shadow:var(--neu-in),0 0 0 2px var(--red)}
+.setup-form .factions{margin-top:12px}
+@media(max-width:760px){.setup-grid{grid-template-columns:1fr}.setup-view .viewer{min-height:280px;max-height:340px}}
 .hist-panel{width:100%;max-width:560px;max-height:85vh;overflow-y:auto;padding:24px}
 .hist-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -301,11 +310,13 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <h1>Body Pain Tracker</h1>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="neu-pill" id="settings-btn" title="Body model, height, weight and shape">Body settings</button>
     <button class="neu-pill" id="body-toggle" title="Switch body model">Male</button>
     <button class="neu-pill" id="clear-btn">Clear All</button>
   </div>
 </header>
 
+<div id="settings-holder" hidden>
 <section class="profile neu">
   <h3>Body Parameters</h3>
   <div class="param-row">
@@ -314,7 +325,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
     <div class="pf"><label for="age">Age</label><input type="number" id="age" placeholder="e.g. 30" min="1" max="120"></div>
   </div>
-  <div class="prof-hint" id="bmi-hint">Enter your measurements for the doctor summary. Use the toggle above to switch body model.</div>
+  <div class="prof-hint" id="bmi-hint">Used to size the model and for your doctor summary.</div>
   <button class="params-toggle shape-toggle" id="shape-toggle" aria-expanded="false" aria-controls="shape-panel">
     <svg class="summ-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
     Adjust body shape <span class="shape-count" id="shape-count" hidden></span>
@@ -325,6 +336,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <button class="params-toggle" id="shape-reset">Reset all</button>
   </div>
 </section>
+</div>
 
 <div class="main">
   <section class="diag neu">
@@ -533,26 +545,29 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <div class="factions"><button type="submit" class="btn-accent" id="pass-ok">Continue</button><button type="button" class="btn-ghost" id="pass-cancel">Cancel</button></div>
   </form>
 </div>
-<!-- WELCOME (first run) — self-contained: this block, the .welcome CSS and the WELCOME script section.
-     It only fills in the same fields as Body Parameters, so it can be deleted or moved without touching anything else. -->
-<div class="hist-overlay" id="welcome-overlay" hidden>
-  <form class="hist-panel neu confirm-panel welcome" id="welcome-form" role="dialog" aria-modal="true" aria-labelledby="welcome-title" novalidate>
-    <h2 id="welcome-title">Welcome to Body Pain Tracker</h2>
-    <p class="welcome-sub">Set up the body you'll mark pain on. Everything here is optional and can be changed later under Body Parameters.</p>
-    <span class="welcome-lbl" id="welcome-body-lbl">Body model</span>
-    <div class="when-row" id="welcome-body" role="group" aria-labelledby="welcome-body-lbl">
-      <button type="button" class="when-chip" data-b="male" aria-pressed="true">Male</button>
-      <button type="button" class="when-chip" data-b="female" aria-pressed="false">Female</button>
+<!-- SETUP (first-run welcome + Body settings) — self-contained: this block, the .setup CSS, the settings button and the
+     SETUP script section. It moves the live 3D viewer and the Body Parameters card into itself while open and puts
+     them back on close, so it adds no logic of its own to the tracker and can be removed or moved into the merged app. -->
+<div class="hist-overlay" id="setup-overlay" hidden>
+  <div class="hist-panel neu setup" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+    <button class="fc setup-x" id="setup-x" aria-label="Close" hidden>&times;</button>
+    <h2 id="setup-title">Welcome to Body Pain Tracker</h2>
+    <p class="welcome-sub" id="setup-sub"></p>
+    <div class="setup-grid">
+      <div class="setup-view" id="setup-view"></div>
+      <div class="setup-form">
+        <span class="welcome-lbl" id="setup-body-lbl">Body model</span>
+        <div class="when-row" id="setup-body" role="group" aria-labelledby="setup-body-lbl">
+          <button type="button" class="when-chip" data-b="male" aria-pressed="true">Male</button>
+          <button type="button" class="when-chip" data-b="female" aria-pressed="false">Female</button>
+        </div>
+        <p class="welcome-note" id="setup-lock" hidden></p>
+        <div id="setup-params"></div>
+        <p class="setup-err" id="setup-err" role="alert"></p>
+        <div class="factions"><button type="button" class="btn-accent" id="setup-done">Start</button></div>
+      </div>
     </div>
-    <div class="welcome-grid">
-      <div class="pf"><label for="w-ht-ft">Height (ft)</label><input type="number" id="w-ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
-      <div class="pf"><label for="w-ht-in">Height (in)</label><input type="number" id="w-ht-in" placeholder="e.g. 10" min="0" max="11"></div>
-      <div class="pf"><label for="w-wt">Weight (lbs)</label><input type="number" id="w-wt" placeholder="e.g. 170" min="60" max="1000"></div>
-      <div class="pf"><label for="w-age">Age</label><input type="number" id="w-age" placeholder="e.g. 30" min="1" max="120"></div>
-    </div>
-    <p class="welcome-note">Stored only in this browser. The body model locks once you log your first entry.</p>
-    <div class="factions"><button type="submit" class="btn-accent" id="welcome-start">Start</button><button type="button" class="btn-ghost" id="welcome-skip">Skip for now</button></div>
-  </form>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -574,7 +589,7 @@ function easeIO(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
    ═══════════════════════════════════════════ */
 const MODELS={male:'models/human_body_base_mesh_male.glb',female:'models/free_human_body_base_mesh_female.glb'};
 let skinMat, bodyGroup, allMeshes=[], loadedModels={}, currentBodyType='male';
-let modelBBox=null, showMarkers=false, bodyMesh=null;
+let modelBBox=null, showMarkers=false, bodyMesh=null, setupOpen=false;
 
 function initMaterials(){
   skinMat=new THREE.MeshStandardMaterial({
@@ -1792,6 +1807,7 @@ function setupControls(el){
 }
 
 function handleClick(e,el){
+  if(setupOpen)return;   // the model is only a preview while the setup panel is open
   const rect=el.getBoundingClientRect();
   const ex=e.clientX||lastDownX,ey=e.clientY||lastDownY;
   mouse.x=((ex-rect.left)/rect.width)*2-1;
@@ -2492,9 +2508,9 @@ function refreshBmiHint(){
     hint.textContent=`BMI: ${bmiVal.toFixed(1)} `+(minor?'· adult ranges don’t apply under 20':`(${cat})`)
       +(outOfRange?' · model shown at the nearest size it supports':'');
   }else if(ST.htFt||ST.wt){
-    hint.textContent=`Add your ${ST.htFt?'weight':'height'} to see BMI. Use the toggle above to switch body model.`;
+    hint.textContent=`Add your ${ST.htFt?'weight':'height'} to see BMI.`;
   }else{
-    hint.textContent='Enter your measurements for the doctor summary. Use the toggle above to switch body model.';
+    hint.textContent='Used to size the model and for your doctor summary.';
   }
 }
 function applyMeasurements(){
@@ -2534,6 +2550,9 @@ function updateBodyToggle(){
   btn.classList.toggle('locked',locked);
   btn.innerHTML=(locked?LOCK_SVG:'')+label;
   btn.title=locked?'Body type is locked while entries exist. Click to clear entries and switch.':'Switch body model';
+  document.querySelectorAll('#setup-body [data-b]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.b===currentBodyType)));
+  const lk=document.getElementById('setup-lock'),n=ST.entries.length;
+  if(lk){lk.hidden=!locked;lk.textContent=locked?`Your ${entryCount(n)} ${n===1?'is':'are'} logged on this body. Changing the body model clears ${n===1?'it':'them'} and starts fresh — you'll be asked to confirm first.`:''}
 }
 function switchBodyType(){
   currentBodyType=currentBodyType==='male'?'female':'male';
@@ -2563,7 +2582,7 @@ document.getElementById('body-toggle').addEventListener('click',()=>{
   const other=currentBodyType==='male'?'Female':'Male',n=ST.entries.length;
   openConfirm({
     title:'Switch body type?',
-    msg:`Your ${entryCount(n)} ${n===1?'was':'were'} logged on this body. Switching to ${other} will permanently clear ${n===1?'it':'all of them'}. Copy your Summary for Doctor first if you need it.`,
+    msg:`Switching to the ${other} model clears your ${entryCount(n)} and starts your history fresh on the new body. This can't be undone. Copy your Summary for Doctor first if you need it.`,
     ok:'Clear & switch',returnFocus:document.getElementById('body-toggle'),
     onOk:()=>{tombstone(ST.entries.map(e=>e.id));ST.entries=[];save();switchBodyType();renderLog();renderSummary();toast('Entries cleared · switched to '+other)}
   });
@@ -3135,31 +3154,73 @@ updateCamera();
 renderLog();renderSummary();
 animate();
 /* ═══════════════════════════════════════════
-   WELCOME (first run) — self-contained, see the markup comment
+   SETUP — first-run welcome and "Body settings" (self-contained, see the markup comment)
    ═══════════════════════════════════════════ */
-// Shown once, only on a device with no profile and no entries. It writes into the Body Parameters
-// fields and lets the normal handlers save, so it adds no data of its own beyond the "seen" flag.
+// One panel, two modes. 'welcome' (first run only: no profile, no entries) can't be dismissed until height, weight and age
+// are filled in. 'settings' (Body settings button) applies changes live and keeps all entries; only changing the body
+// model clears them, through the same confirmation as the header toggle. While open, the real 3D viewer and the real
+// Body Parameters card are moved in here, so the preview and the shape sliders are the live ones.
 (function(){
-  const ov=document.getElementById('welcome-overlay'),KEY='bpt_welcomed';
+  const g=id=>document.getElementById(id);
+  const ov=g('setup-overlay'),viewer=g('viewer'),prof=document.querySelector('.profile'),holder=g('settings-holder');
+  const KEY='bpt_welcomed',FIELDS=['ht-ft','ht-in','wt','age'];
+  let mode=null,home=null;
+
+  function problems(){
+    const ft=+g('ht-ft').value,inch=g('ht-in').value===''?0:+g('ht-in').value,wt=+g('wt').value,age=+g('age').value,bad=[];
+    if(!(Number.isInteger(ft)&&ft>=3&&ft<=8))bad.push(['ht-ft','height (feet)']);
+    if(!(Number.isInteger(inch)&&inch>=0&&inch<=11))bad.push(['ht-in','height (inches, 0–11)']);
+    if(!(wt>=60&&wt<=1000))bad.push(['wt','weight (60–1000 lbs)']);
+    if(!(Number.isInteger(age)&&age>=1&&age<=120))bad.push(['age','age (1–120)']);
+    return bad;
+  }
+  function showProblems(bad){
+    FIELDS.forEach(id=>g(id).classList.toggle('invalid',bad.some(b=>b[0]===id)));
+    g('setup-err').textContent=bad.length?'Please fill in or fix: '+bad.map(b=>b[1]).join(', ')+'.':'';
+  }
+  function open(m){
+    mode=m;setupOpen=true;
+    g('setup-title').textContent=m==='welcome'?'Welcome to Body Pain Tracker':'Body settings';
+    g('setup-sub').textContent=m==='welcome'
+      ?'Set up the body you will mark pain on. Height, weight and age size the model and feed your doctor summary. You can change any of it later under Body settings.'
+      :'Changes apply right away and your logged entries are kept. Only changing the body model clears them.';
+    g('setup-done').textContent=m==='welcome'?'Start':'Done';
+    g('setup-x').hidden=m==='welcome';
+    home={parent:viewer.parentNode,next:viewer.nextSibling};
+    g('setup-view').appendChild(viewer);
+    g('setup-params').appendChild(prof);
+    showProblems([]);updateBodyToggle();
+    ov.hidden=false;
+    (m==='welcome'?g('ht-ft'):g('setup-done')).focus();
+  }
+  function close(){
+    ov.hidden=true;setupOpen=false;mode=null;
+    if(home)home.parent.insertBefore(viewer,home.next);
+    holder.appendChild(prof);
+    try{localStorage.setItem(KEY,'1')}catch{}
+    closePickMenu();
+    g('settings-btn').focus();
+  }
+  g('setup-done').addEventListener('click',()=>{
+    const bad=problems();
+    if(bad.length){showProblems(bad);g(bad[0][0]).focus();return}
+    close();
+  });
+  g('setup-x').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov&&mode==='settings')close()});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&mode==='settings'&&!ov.hidden&&g('confirm-overlay').hidden)close();
+  });
+  FIELDS.forEach(id=>g(id).addEventListener('input',()=>{g(id).classList.remove('invalid');g('setup-err').textContent=''}));
+  g('setup-body').addEventListener('click',e=>{
+    const b=e.target.closest('[data-b]');
+    if(b&&b.dataset.b!==currentBodyType)g('body-toggle').click();   // same path as the header toggle, incl. the clear-entries confirm
+  });
+  g('settings-btn').addEventListener('click',()=>open('settings'));
+
   let seen=false,hasProfile=false;
   try{seen=!!localStorage.getItem(KEY);hasProfile=!!localStorage.getItem('bpt_profile')}catch{seen=true}
-  if(seen||hasProfile||ST.entries.length)return;
-  let pick=currentBodyType;
-  const chips=document.querySelectorAll('#welcome-body .when-chip');
-  const sync=()=>chips.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.b===pick)));
-  document.getElementById('welcome-body').addEventListener('click',e=>{const b=e.target.closest('.when-chip');if(b){pick=b.dataset.b;sync()}});
-  const close=()=>{try{localStorage.setItem(KEY,'1')}catch{}ov.hidden=true};
-  document.getElementById('welcome-form').addEventListener('submit',e=>{
-    e.preventDefault();
-    [['w-ht-ft','ht-ft'],['w-ht-in','ht-in'],['w-wt','wt'],['w-age','age']].forEach(([from,to])=>{document.getElementById(to).value=document.getElementById(from).value});
-    close();
-    if(pick!==currentBodyType)switchBodyType();
-    applyMeasurements();
-  });
-  document.getElementById('welcome-skip').addEventListener('click',close);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden)close()});
-  sync();ov.hidden=false;
-  document.getElementById('w-ht-ft').focus();
+  if(!seen&&!hasProfile&&!ST.entries.length)open('welcome');
 })();
 
 // Ask the sync extension (if installed) to say hello; its content script may attach a moment later.
