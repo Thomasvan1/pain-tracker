@@ -300,6 +300,44 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .confirm-danger:hover{background:var(--red);filter:brightness(1.08);box-shadow:var(--neu-up)}
 #body-toggle.locked{color:var(--text-muted)}
 #body-toggle.locked:hover{color:var(--text-sec)}
+.step-btn{flex-shrink:0;width:36px;height:36px;border:none;border-radius:50%;background:var(--surface);box-shadow:var(--neu-soft);color:var(--text-sec);font:600 1.15rem/1 inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+.step-btn:active{box-shadow:var(--neu-in);color:var(--accent)}
+.step-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rng{display:flex;align-items:center;gap:10px}
+.setup-form .params-grid{grid-template-columns:1fr}
+.rng input[type=range]{flex:1;min-width:0}
+.param label span{cursor:pointer}
+.sheet-hdr{display:none}
+.sync-status.pending{color:var(--amber);font-weight:600}
+.sync-nudge:not([hidden]){display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px 12px 16px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--neu-soft);border-left:4px solid var(--amber);font-size:.84rem;line-height:1.5;color:var(--text)}
+.sync-nudge span{flex:1 1 220px}
+.sync-nudge-acts{display:flex;align-items:center;gap:6px}
+.sync-nudge .btn-accent{padding:8px 18px;font-size:.8rem;min-height:40px}
+/* Touch screens: bigger targets for the sliders and steppers */
+@media(pointer:coarse){
+  .step-btn{width:44px;height:44px;font-size:1.3rem}
+  .sev-track{height:14px;border-radius:7px}
+  .sev-fill{border-radius:7px}
+  .sev-input{min-height:52px;top:-19px}
+  .sev-badge{min-width:44px;height:34px;border-radius:17px;font-size:1rem}
+  .param input[type=range]{height:10px;border-radius:5px}
+  .param input[type=range]::-webkit-slider-thumb{width:28px;height:28px}
+  .param input[type=range]::-moz-range-thumb{width:28px;height:28px}
+  .param{gap:8px}
+  .fc{min-width:44px;min-height:44px}
+}
+/* Phone: "Adjust body shape" slides up as a sheet and the model stays in view above it */
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@media(max-width:760px){
+  .shape-panel:not([hidden]){position:fixed;left:0;right:0;bottom:0;z-index:96;margin:0;max-height:46vh;max-height:46dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border-top:none;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.3);padding:0 18px calc(18px + env(safe-area-inset-bottom,0px));animation:sheetUp .28s var(--ease)}
+  .sheet-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:1;background:var(--surface);padding:14px 0 10px;margin-bottom:6px;font-size:.95rem;font-weight:700}
+  .sheet-hdr::before{content:"";position:absolute;top:6px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--border)}
+  .sheet-hdr .btn-accent{padding:8px 20px;font-size:.82rem;min-height:40px}
+  .shape-panel .shape-hint{margin-bottom:14px}
+  body.shape-sheet .setup-view{position:fixed;top:0;left:0;right:0;height:54vh;height:54dvh;z-index:95;background:var(--bg);padding:10px 12px 12px}
+  body.shape-sheet .setup-view .viewer{height:100%;min-height:0;max-height:none;aspect-ratio:auto}
+}
+@media(prefers-reduced-motion:reduce){.shape-panel:not([hidden]){animation:none}}
 @media(max-width:860px){.main{grid-template-columns:1fr}.log-list{max-height:280px}}
 @media(max-width:520px){.params-grid{grid-template-columns:1fr}.param-row{flex-direction:column}.factions{flex-direction:column}.factions button{width:100%}.hdr h1{font-size:1.25rem}}
 </style>
@@ -315,15 +353,19 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <button class="neu-pill" id="clear-btn">Clear All</button>
   </div>
 </header>
+<div class="sync-nudge" id="sync-nudge" role="status" hidden>
+  <span id="sync-nudge-text"></span>
+  <div class="sync-nudge-acts"><button type="button" class="btn-accent" id="sync-nudge-go"></button><button type="button" class="fc" id="sync-nudge-x" aria-label="Dismiss">&times;</button></div>
+</div>
 
 <div id="settings-holder" hidden>
 <section class="profile neu">
   <h3>Body Parameters</h3>
   <div class="param-row">
-    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" id="ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
-    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" id="ht-in" placeholder="e.g. 10" min="0" max="11"></div>
-    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
-    <div class="pf"><label for="age">Age</label><input type="number" id="age" placeholder="e.g. 30" min="1" max="120"></div>
+    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" inputmode="numeric" id="ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
+    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" inputmode="numeric" id="ht-in" placeholder="e.g. 10" min="0" max="11"></div>
+    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" inputmode="numeric" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
+    <div class="pf"><label for="age">Age</label><input type="number" inputmode="numeric" id="age" placeholder="e.g. 30" min="1" max="120"></div>
   </div>
   <div class="prof-hint" id="bmi-hint">Used to size the model and for your doctor summary.</div>
   <button class="params-toggle shape-toggle" id="shape-toggle" aria-expanded="false" aria-controls="shape-panel">
@@ -331,7 +373,8 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     Adjust body shape <span class="shape-count" id="shape-count" hidden></span>
   </button>
   <div class="shape-panel" id="shape-panel" hidden>
-    <p class="shape-hint">Weight sets your overall build. Fine-tune individual areas so the model looks more like you — double-click a slider to reset it.</p>
+    <div class="sheet-hdr"><span>Adjust body shape</span><button type="button" class="btn-accent" id="shape-done">Done</button></div>
+    <p class="shape-hint">Weight sets your overall build. Fine-tune individual areas so the model looks more like you — tap a percentage to reset that slider.</p>
     <div class="params-grid" id="shape-grid"></div>
     <button class="params-toggle" id="shape-reset">Reset all</button>
   </div>
@@ -380,7 +423,9 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
       <div class="fg"><label for="floc">Detected Region</label><input type="text" id="floc" readonly></div>
       <div class="fg"><label for="fsev">Severity (1-10)</label>
         <div class="sev-row">
+          <button type="button" class="step-btn" id="sev-dn" aria-label="Lower severity">&minus;</button>
           <div class="sev-track"><div class="sev-fill" id="sev-fill" style="width:50%;background:var(--amber)"></div><input type="range" class="sev-input" id="fsev" min="1" max="10" value="5"></div>
+          <button type="button" class="step-btn" id="sev-up" aria-label="Raise severity">+</button>
           <span class="sev-badge" id="sbadge" style="background:var(--amber)">5</span>
         </div>
       </div>
@@ -634,7 +679,63 @@ function getBodyProportions(){
     bmiRatio=bmi/refBmi;
   }
 
-  return {htRatio, bmiRatio, scaleY:htRatio};
+  return {htRatio, bmiRatio};
+}
+
+// Height changes proportions, not just size — a plain uniform scale only looks like the view zoomed.
+// Taller: legs lengthen the most, the torso and arms follow, the head grows only a little, and the body widens
+// less than it lengthens (at the same BMI a taller person is longer and leaner). Shorter is the reverse.
+// Works on the untouched mesh, before the weight shaping, and moves every mesh (eyes included) the same way.
+function applyHeight(model){
+  const props=getBodyProportions(),s=props?props.htRatio:1;
+  if(Math.abs(s-1)<0.004||!bodyMesh)return;
+  const L=REGION_LM[currentBodyType],A=L.arm,geo=bodyMesh.geometry;
+  geo.computeBoundingBox();
+  const bb=geo.boundingBox,H=bb.max.y-bb.min.y,cx=(bb.min.x+bb.max.x)/2,czn=(bb.min.z+bb.max.z)/2/H;
+  const kh=Math.pow(s,0.3),kl=Math.pow(s,1.1),wb=Math.pow(s,0.6);
+  const rc=L.crotch,rn=L.neckBase;
+  const kt=(s-rc*kl-(1-rn)*kh)/(rn-rc);   // torso takes whatever is left, so total height is exactly s
+  const Y=r=>r<rc?kl*r:r<rn?kl*rc+kt*(r-rc):kl*rc+kt*(rn-rc)+kh*(r-rn);
+  const ky=r=>r<rc?kl:r<rn?kt:kh;
+  const W=r=>lerp(wb,kh,smoothstep(rn,L.chin,r));   // the head keeps its own shape: same factor in every direction
+  // Body mapping in mirrored, height-normalised space q=[|x|, relY, z]
+  const body=q=>[q[0]*W(q[1]),Y(q[1]),czn+(q[2]-czn)*W(q[1])];
+  const S=[A.o[0]+A.v[0]*A.start,A.o[1]+A.v[1]*A.start,A.o[2]+A.v[2]*A.start],TS=body(S);
+  const map=(x,y,z)=>{
+    const sgn=x<cx?-1:1,q=[Math.abs(x-cx)/H,(y-bb.min.y)/H,z/H],b=body(q);
+    let out=b,arm=0;
+    if(q[1]>rc){
+      const dx=q[0]-A.o[0],dy=q[1]-A.o[1],dz=q[2]-A.o[2],al=dx*A.v[0]+dy*A.v[1]+dz*A.v[2];
+      const px=dx-A.v[0]*al,py=dy-A.v[1]*al,pz=dz-A.v[2]*al;
+      if(al>A.start&&Math.hypot(px,py,pz)<0.09){
+        // Arms lengthen with height along their own axis and thicken like the rest of the body, hung from the moved shoulder.
+        arm=smoothstep(A.start,A.shoulder,al);
+        const t=(al-A.start)*s;
+        out=[lerp(b[0],TS[0]+A.v[0]*t+px*wb,arm),lerp(b[1],TS[1]+A.v[1]*t+py*wb,arm),lerp(b[2],TS[2]+A.v[2]*t+pz*wb,arm)];
+      }
+    }
+    return{x:cx+sgn*out[0]*H,y:bb.min.y+out[1]*H,z:out[2]*H,r:q[1],arm};
+  };
+  model.updateMatrixWorld(true);
+  const toBody=new THREE.Matrix4(),back=new THREE.Matrix4(),inv=new THREE.Matrix4().copy(bodyMesh.matrixWorld).invert(),v=new THREE.Vector3();
+  model.traverse(c=>{
+    if(!c.isMesh||!c.geometry)return;
+    const pos=c.geometry.attributes.position,nor=c===bodyMesh?c.geometry.attributes.normal:null;
+    toBody.multiplyMatrices(inv,c.matrixWorld);back.copy(toBody).invert();
+    for(let i=0;i<pos.count;i++){
+      v.fromBufferAttribute(pos,i).applyMatrix4(toBody);
+      const m=map(v.x,v.y,v.z);
+      if(nor&&m.arm<0.5){
+        // Stretching a surface tilts its normals the opposite way; keep the authored shading consistent with the new shape.
+        const w=W(m.r),nx=nor.getX(i)/w,ny=nor.getY(i)/ky(m.r),nz=nor.getZ(i)/w,l=Math.hypot(nx,ny,nz)||1;
+        nor.setXYZ(i,nx/l,ny/l,nz/l);
+      }
+      v.set(m.x,m.y,m.z).applyMatrix4(back);
+      pos.setXYZ(i,v.x,v.y,v.z);
+    }
+    pos.needsUpdate=true;if(nor)nor.needsUpdate=true;
+    c.geometry.computeBoundingBox();c.geometry.computeBoundingSphere();
+  });
 }
 
 // Fat distribution by height (0 = feet, 1 = top of head): [relY, weight, forward bias, backward bias]
@@ -884,14 +985,14 @@ function buildBody(){
     modelBBox={box,size,center};
 
     // Scale model to fit scene
-    const props=getBodyProportions();
-    const baseSc=BODY_H/size.y*(props?props.scaleY:1);
+    const baseSc=BODY_H/size.y;   // height is applied to the mesh itself (applyHeight), not as a scale
     model.scale.set(baseSc, baseSc, baseSc);
 
     bodyMesh=null;
     model.traverse(c=>{if(c.isMesh&&(!bodyMesh||c.geometry.attributes.position.count>bodyMesh.geometry.attributes.position.count))bodyMesh=c});
     buildRegionMap(bodyMesh.geometry,currentBodyType);
     remapLegacyEntries(model);
+    applyHeight(model);
     applyBodyShape(model);
 
     // Recompute after scale
@@ -1503,6 +1604,55 @@ function classifyRegion(xs,r,z,nx,ny,nz,L){
   return['Face',0];
 }
 
+// Splits one merged "digits" region into a region per digit, using the mesh itself rather than fixed measurements.
+// Digits join at the knuckles, so near the base the region is one connected patch; moving the cut toward the tips,
+// it falls apart into separate digits. The first cut that gives exactly `want` pieces seeds the digits, and every
+// vertex below the cut joins whichever digit it is connected to first. Returns Map(vertex -> digit 0..want-1, ordered
+// by `across`), or null if the mesh never separates into that many pieces.
+function splitDigits(verts,nb,along,across,want){
+  if(verts.length<want*3)return null;
+  const inSet=new Set(verts);
+  let lo=Infinity,hi=-Infinity;
+  verts.forEach(v=>{const a=along(v);if(a<lo)lo=a;if(a>hi)hi=a});
+  const piecesAt=t=>{
+    const seen=new Set(),out=[];
+    for(const v of verts){
+      if(seen.has(v)||along(v)<t)continue;
+      const comp=[v];seen.add(v);
+      for(let q=0;q<comp.length;q++){
+        const l=nb[comp[q]];if(!l)continue;
+        for(const u of l)if(inSet.has(u)&&!seen.has(u)&&along(u)>=t){seen.add(u);comp.push(u)}
+      }
+      if(comp.length>=3)out.push(comp);
+    }
+    return out;
+  };
+  let seeds=null;
+  for(let k=0;k<=60&&!seeds;k++){
+    const pcs=piecesAt(lo+(hi-lo)*k/80);   // stop at 75% of the way: past that only fingertips are left
+    if(pcs.length===want)seeds=pcs;
+  }
+  if(!seeds)return null;
+  const mean=c=>c.reduce((t,v)=>t+across(v),0)/c.length;
+  seeds.sort((a,b)=>mean(a)-mean(b));
+  const out=new Map(),queue=[];
+  seeds.forEach((c,d)=>c.forEach(v=>{out.set(v,d);queue.push(v)}));
+  for(let q=0;q<queue.length;q++){
+    const v=queue[q],l=nb[v];if(!l)continue;
+    for(const u of l)if(inSet.has(u)&&!out.has(u)){out.set(u,out.get(v));queue.push(u)}
+  }
+  // Anything still unreached (a stray patch) takes the digit nearest to it across the hand or foot.
+  const centres=seeds.map(mean);
+  verts.forEach(v=>{
+    if(out.has(v))return;
+    let best=0;centres.forEach((c,d)=>{if(Math.abs(c-across(v))<Math.abs(centres[best]-across(v)))best=d});
+    out.set(v,best);
+  });
+  return out;
+}
+const FINGER_NAMES=['Index Finger','Middle Finger','Ring Finger','Little Finger'];
+const TOE_NAMES=['Big Toe','Second Toe','Third Toe','Fourth Toe','Little Toe'];
+
 // Built once per body type from the untouched mesh; reshaping never changes vertex order, so labels stay valid.
 const regionMaps={};
 function buildRegionMap(geo,type){
@@ -1510,14 +1660,57 @@ function buildRegionMap(geo,type){
   const L=REGION_LM[type],pos=geo.attributes.position,nor=geo.attributes.normal,n=pos.count;
   geo.computeBoundingBox();
   const bb=geo.boundingBox,H=bb.max.y-bb.min.y,cx=(bb.min.x+bb.max.x)/2;
-  const labels=[],lookup=new Map(),idx=new Uint16Array(n);
+  const names=new Array(n),left=new Uint8Array(n);
   for(let i=0;i<n;i++){
     const xs=(pos.getX(i)-cx)/H;
     const [name,sided]=classifyRegion(xs,(pos.getY(i)-bb.min.y)/H,pos.getZ(i)/H,nor.getX(i),nor.getY(i),nor.getZ(i),L);
-    const label=sided?(xs>0?'Left ':'Right ')+name:name;
-    let k=lookup.get(label);
-    if(k===undefined){k=labels.length;labels.push(label);lookup.set(label,k)}
+    left[i]=xs>0?1:0;
+    names[i]=sided?(xs>0?'Left ':'Right ')+name:name;
+  }
+
+  // One region per finger and per toe: you can feel something in one digit and not the next.
+  const rep=buildWeld(geo,H*1e-5),nb=buildNeighbors(geo,rep);
+  const A=L.arm,ac=[A.v[1]*A.palm[2]-A.v[2]*A.palm[1],A.v[2]*A.palm[0]-A.v[0]*A.palm[2],A.v[0]*A.palm[1]-A.v[1]*A.palm[0]];
+  const armPt=i=>{
+    const dx=Math.abs((pos.getX(i)-cx)/H)-A.o[0],dy=(pos.getY(i)-bb.min.y)/H-A.o[1],dz=pos.getZ(i)/H-A.o[2];
+    const along=dx*A.v[0]+dy*A.v[1]+dz*A.v[2];
+    return{along,across:(dx-A.v[0]*along)*ac[0]+(dy-A.v[1]*along)*ac[1]+(dz-A.v[2]*along)*ac[2]};
+  };
+  const report=[];
+  for(const side of ['Left ','Right ']){
+    const pick=f=>{const v=[];for(let i=0;i<n;i++)if(rep[i]===i&&f(names[i]))v.push(i);return v};
+    // Fingers: ordered across the hand, starting from the thumb's side.
+    const fingers=pick(nm=>nm===side+'Fingers'),thumb=pick(nm=>nm===side+'Thumb');
+    let split=splitDigits(fingers,nb,i=>armPt(i).along,i=>armPt(i).across,4);
+    if(split){
+      const mean=vs=>vs.reduce((t,i)=>t+armPt(i).across,0)/(vs.length||1);
+      const flip=thumb.length&&mean(thumb)>mean(fingers);   // digit 0 must be the one next to the thumb
+      split.forEach((d,v)=>{names[v]=side+FINGER_NAMES[flip?3-d:d]});
+    }
+    report.push(side+'fingers '+(split?'ok':'NOT SPLIT')+' ('+fingers.length+' verts)');
+    // Toes: ordered from the big toe outward.
+    const toes=pick(nm=>nm===side+'Big Toe'||nm===side+'Toes');
+    split=splitDigits(toes,nb,i=>pos.getZ(i)/H,i=>Math.abs((pos.getX(i)-cx)/H),5);
+    if(split)split.forEach((d,v)=>{names[v]=side+TOE_NAMES[d]});
+    report.push(side+'toes '+(split?'ok':'NOT SPLIT')+' ('+toes.length+' verts)');
+  }
+  for(let i=0;i<n;i++)names[i]=names[rep[i]];   // seam copies follow their canonical vertex
+  if(location.hash.includes('regions'))console.info('[regions] '+type+': '+report.join(' · '));
+
+  const labels=[],lookup=new Map(),idx=new Uint16Array(n);
+  for(let i=0;i<n;i++){
+    let k=lookup.get(names[i]);
+    if(k===undefined){k=labels.length;labels.push(names[i]);lookup.set(names[i],k)}
     idx[i]=k;
+  }
+  if(location.hash.includes('regions')){
+    // name: [vertices, mean x, mean height, mean z] (fractions of body height) — to check the digits are in the right order
+    const acc={};
+    for(let i=0;i<n;i++)if(/Finger|Toe|Thumb/.test(names[i])){
+      const a=acc[names[i]]||(acc[names[i]]=[0,0,0,0]);
+      a[0]++;a[1]+=(pos.getX(i)-cx)/H;a[2]+=(pos.getY(i)-bb.min.y)/H;a[3]+=pos.getZ(i)/H;
+    }
+    console.info('[regions] '+type+' digits: '+Object.keys(acc).sort().map(k=>k+' n='+acc[k][0]+' x='+(acc[k][1]/acc[k][0]).toFixed(3)+' y='+(acc[k][2]/acc[k][0]).toFixed(3)+' z='+(acc[k][3]/acc[k][0]).toFixed(3)).join(' | '));
   }
   return regionMaps[type]={labels,idx};
 }
@@ -1541,6 +1734,21 @@ function remapLegacyEntries(model){
     }
     if(e.viewLabel)e.viewLabel=flip(e.viewLabel);
     e.regionVer=1;changed=true;
+  });
+  // Entries logged before each finger and toe had its own region say "Fingers" / "Toes": name the exact digit.
+  const digit=spot=>{
+    const an=spot.anchor;
+    if(!an||an.mi!==bodyIdx||!/(Fingers|Toes)$/.test(spot.label||''))return false;
+    const w=[an.u,an.v,an.w],r=regionAtVertex([an.a,an.b,an.c][w.indexOf(Math.max(...w))]);
+    if(r.label===spot.label)return false;
+    spot.label=r.label;spot.regionId=r.id;return true;
+  };
+  bodyEntries().forEach(e=>{
+    if((e.regionVer||0)>=2)return;
+    let hit=digit(e);
+    if(e.route)e.route.points.forEach(p=>{if(digit(p))hit=true});
+    e.regionVer=2;
+    if(hit){e.updatedAt=Date.now();changed=true}
   });
   if(changed){save();renderLog();renderSummary()}
 }
@@ -1633,9 +1841,13 @@ function initScene(){
   initMaterials();
 
   // Resize
+  let lastW=0,lastH=0;
   const ro=new ResizeObserver(entries=>{
     const{width:rw,height:rh}=entries[0].contentRect;
     if(rw<1||rh<1)return;
+    const cw=Math.round(rw),ch=Math.round(rh);
+    if(cw===lastW&&ch===lastH)return;
+    lastW=cw;lastH=ch;
     camera.aspect=rw/rh;
     camera.updateProjectionMatrix();
     renderer.setSize(rw,rh);
@@ -1692,8 +1904,10 @@ function updateCamera(){
 }
 
 let lastDownX=0,lastDownY=0,zoomHintTimer=null;
-const HINT_NEW='Click on body to mark pain · Drag to rotate · Ctrl + scroll to zoom';
-const HINT_MARKERS='Click a marker to view entry · Drag to rotate · Ctrl + scroll to zoom';
+const TOUCH=window.matchMedia('(pointer:coarse)').matches;
+const HINT_NEW=TOUCH?'Tap the body to mark pain · Drag to rotate · Pinch to zoom':'Click on body to mark pain · Drag to rotate · Ctrl + scroll to zoom';
+const HINT_MARKERS=TOUCH?'Tap a marker to view entry · Drag to rotate · Pinch to zoom':'Click a marker to view entry · Drag to rotate · Ctrl + scroll to zoom';
+if(TOUCH)document.getElementById('zhint').textContent=HINT_NEW;
 
 function flashZoomHint(){
   const hint=document.getElementById('zhint');
@@ -1705,16 +1919,42 @@ function flashZoomHint(){
 
 function setupControls(el){
   let dragging=false,downX=0,downY=0,prevX=0,prevY=0,moved=false,handledAt=0;
-  let pinchDist=0;
+  let pinchDist=0,lastTouchAt=0;
+  // Every finger on the model is tracked by its own id. One finger rotates, two fingers zoom. Sharing a single
+  // "previous position" between fingers made the model jump wildly as soon as a second finger touched.
+  const pts=new Map();
+  const spread=()=>{const[a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)};
 
   el.addEventListener('pointerdown',e=>{
-    if(e.button>0)return;
-    dragging=true;moved=false;
-    downX=prevX=lastDownX=e.clientX;downY=prevY=lastDownY=e.clientY;
+    if(e.pointerType==='mouse'&&e.button>0)return;
+    if(e.pointerType!=='mouse')lastTouchAt=performance.now();
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    // keep getting this finger's moves if it slides off the model (buttons drawn over the model keep their own clicks)
+    if(e.target===renderer.domElement){try{el.setPointerCapture(e.pointerId)}catch{}}
     animating=false;
+    if(pts.size===1){
+      dragging=true;moved=false;
+      downX=prevX=lastDownX=e.clientX;downY=prevY=lastDownY=e.clientY;
+    }else{
+      // second finger: this gesture is a zoom, never a tap
+      moved=true;closePickMenu();
+      pinchDist=pts.size===2?spread():0;
+    }
   });
   el.addEventListener('pointermove',e=>{
-    if(!dragging)return;
+    const p=pts.get(e.pointerId);
+    if(!p)return;
+    p.x=e.clientX;p.y=e.clientY;
+    if(pts.size===2){
+      const nd=spread();
+      if(pinchDist>0&&nd>0){
+        dist=clamp(dist*(pinchDist/nd),minDist,maxDist);userZoomed=true;
+        updateCamera();
+      }
+      pinchDist=nd;
+      return;
+    }
+    if(pts.size!==1||!dragging)return;
     const dx=e.clientX-prevX,dy=e.clientY-prevY;
     const totalDx=e.clientX-downX,totalDy=e.clientY-downY;
     if(Math.abs(totalDx)+Math.abs(totalDy)>12){if(!moved)closePickMenu();moved=true}
@@ -1726,10 +1966,25 @@ function setupControls(el){
     }
     prevX=e.clientX;prevY=e.clientY;
   });
-  el.addEventListener('pointerup',e=>{
-    if(!moved&&dragging){handleClick(e,el);handledAt=performance.now()}
-    dragging=false;
-  });
+  const release=(e,cancelled)=>{
+    if(!pts.has(e.pointerId))return;
+    pts.delete(e.pointerId);
+    try{el.releasePointerCapture(e.pointerId)}catch{}
+    pinchDist=0;
+    if(pts.size===1){
+      // one finger left after a zoom: carry on rotating from where that finger is, with no jump
+      const[r]=[...pts.values()];prevX=r.x;prevY=r.y;
+      return;
+    }
+    if(pts.size===0){
+      if(!cancelled&&!moved&&dragging){handleClick(e,el);handledAt=performance.now()}
+      // a tap that was part of a zoom or was cancelled must not turn into a click afterwards
+      if(moved||cancelled)handledAt=performance.now();
+      dragging=false;
+    }
+  };
+  el.addEventListener('pointerup',e=>release(e,false));
+  el.addEventListener('pointercancel',e=>release(e,true));
   el.addEventListener('click',e=>{
     if(!moved&&performance.now()-handledAt>400)handleClick(e,el);
   });
@@ -1740,32 +1995,12 @@ function setupControls(el){
     dist=clamp(dist,minDist,maxDist);userZoomed=true;
     updateCamera();
   },{passive:false});
-
-  // Touch pinch zoom
-  el.addEventListener('touchstart',e=>{
-    if(e.touches.length===2){
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      pinchDist=Math.sqrt(dx*dx+dy*dy);
-    }
-  },{passive:true});
-  el.addEventListener('touchmove',e=>{
-    if(e.touches.length===2){
-      const dx=e.touches[0].clientX-e.touches[1].clientX;
-      const dy=e.touches[0].clientY-e.touches[1].clientY;
-      const nd=Math.sqrt(dx*dx+dy*dy);
-      if(pinchDist>0){
-        dist*=(pinchDist/nd);
-        dist=clamp(dist,minDist,maxDist);userZoomed=true;
-        updateCamera();
-      }
-      pinchDist=nd;
-    }
-  },{passive:true});
+  // iOS: stop the page's own pinch-zoom / double-tap zoom from fighting the model
+  ['gesturestart','gesturechange','gestureend'].forEach(t=>el.addEventListener(t,e=>e.preventDefault()));
 
   // Hover detection
   el.addEventListener('mousemove',e=>{
-    if(dragging)return;
+    if(dragging||performance.now()-lastTouchAt<800)return;
     const rect=renderer.domElement.getBoundingClientRect();
     mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
     mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
@@ -2169,7 +2404,7 @@ function saveEntry(){
       normal:ST.clickPt.normal||{x:0,y:0,z:1},
       anchor:ST.clickPt.anchor||null,
       bodyType:currentBodyType,
-      regionVer:1,
+      regionVer:2,
       severity:sev,painType:pt,painOther:other,duration:dur,notes,date:dt,timeApprox:approx,resolved:false,
       updatedAt:Date.now()
     });
@@ -2279,8 +2514,10 @@ const PBKDF2_ITER=600000;
 // Automatic sync state (Firefox + extension + helper). `applying` marks saves caused by incoming data,
 // so they don't immediately trigger another sync.
 const auto={enabled:false,running:false,again:false,timer:null,applying:false,path:null,salt:null,state:'off',retry:null};
+let nudgeTimer=null;
 function markDirty(){
   if(auto.enabled&&!auto.applying)scheduleAutoSync(1500);
+  clearTimeout(nudgeTimer);nudgeTimer=setTimeout(()=>{if(typeof refreshSyncUI==='function')refreshSyncUI()},600);
 }
 function scheduleAutoSync(ms){
   clearTimeout(auto.timer);
@@ -2534,6 +2771,9 @@ document.getElementById('vtabs').addEventListener('click',e=>{
 });
 ['ht-ft','ht-in','wt','age'].forEach(id=>document.getElementById(id).addEventListener('input',applyMeasurements));
 document.getElementById('fsev').addEventListener('input',e=>updateSev(e.target.value));
+[['sev-dn',-1],['sev-up',1]].forEach(([id,d])=>document.getElementById(id).addEventListener('click',()=>{
+  const el=document.getElementById('fsev');el.value=clamp(+el.value+d,1,10);updateSev(el.value);
+}));
 document.getElementById('fclose').addEventListener('click',closeForm);
 document.getElementById('fcancel').addEventListener('click',closeForm);
 // Entries with a route (or the switch on) go through saveRouteEntry; single spots keep the original saveEntry path.
@@ -2618,13 +2858,23 @@ function setShape(id,v){
 document.getElementById('shape-grid').innerHTML=SHAPE_PARTS.map(p=>`
   <div class="param">
     <label for="sh-${p.id}">${p.label}<span id="sh-${p.id}-v">0%</span></label>
-    <input type="range" id="sh-${p.id}" min="-100" max="100" step="5" value="0">
+    <div class="rng">
+      <button type="button" class="step-btn" data-sh="${p.id}" data-d="-5" aria-label="${p.label}: slimmer">&minus;</button>
+      <input type="range" id="sh-${p.id}" min="-100" max="100" step="5" value="0">
+      <button type="button" class="step-btn" data-sh="${p.id}" data-d="5" aria-label="${p.label}: fuller">+</button>
+    </div>
     <div class="param-scale" aria-hidden="true"><span>Slimmer</span><span>Fuller</span></div>
   </div>`).join('');
 SHAPE_PARTS.forEach(p=>{
   const el=document.getElementById('sh-'+p.id);
   el.addEventListener('input',()=>setShape(p.id,+el.value/100));
   el.addEventListener('dblclick',()=>setShape(p.id,0));
+  document.getElementById('sh-'+p.id+'-v').addEventListener('click',e=>{e.preventDefault();setShape(p.id,0)});   // touch has no double-click
+});
+document.getElementById('shape-grid').addEventListener('click',e=>{
+  const b=e.target.closest('.step-btn');if(!b)return;
+  const el=document.getElementById('sh-'+b.dataset.sh);
+  setShape(b.dataset.sh,clamp(+el.value+ +b.dataset.d,-100,100)/100);
 });
 // Pain-type dictionary: describes the sensation only (never a cause or diagnosis), worded so the
 // same term still means the same thing to a doctor reading the log.
@@ -2756,11 +3006,15 @@ function openPickMenu(list,x,y){
 }
 ['pointerdown','pointerup','click','mousemove','wheel','touchstart','touchmove'].forEach(t=>$r('pick-menu').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
 
-document.getElementById('shape-toggle').addEventListener('click',()=>{
+// On a phone the panel is a slide-up sheet (CSS); body.shape-sheet pins the model above it
+function setShapePanel(open){
   const btn=document.getElementById('shape-toggle'),panel=document.getElementById('shape-panel');
-  panel.hidden=!panel.hidden;
-  btn.setAttribute('aria-expanded',String(!panel.hidden));
-});
+  panel.hidden=!open;
+  btn.setAttribute('aria-expanded',String(open));
+  document.body.classList.toggle('shape-sheet',open);
+}
+document.getElementById('shape-toggle').addEventListener('click',()=>setShapePanel(document.getElementById('shape-panel').hidden));
+document.getElementById('shape-done').addEventListener('click',()=>{setShapePanel(false);document.getElementById('shape-toggle').focus()});
 document.getElementById('shape-reset').addEventListener('click',()=>{
   if(!Object.keys(ST.shape).length)return;
   ST.shape={};syncShapeUI();saveProfile();buildBody();
@@ -2818,9 +3072,42 @@ function syncMeta(){try{return JSON.parse(localStorage.getItem('bpt_sync_meta'))
 function setSyncMeta(patch){try{localStorage.setItem('bpt_sync_meta',JSON.stringify({...syncMeta(),...patch}))}catch{}refreshSyncUI()}
 function fmtShort(t){return t?new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'never'}
 function syncMsg(text,kind){const el=$s('sync-msg');el.textContent=text||'';el.className='sync-msg'+(kind?' '+kind:'')}
+// Short fingerprint of everything a sync file would hold, to tell "this device has changes the file doesn't".
+function fpHash(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))>>>0;return h.toString(36)+'.'+str.length.toString(36)}
+const localFp=()=>fpHash(syncFingerprint(buildSyncPayload()));
+// A phone can't watch the sync file, so it can only know two things: this device has changes that were never
+// exported, or it hasn't exchanged a file for a while. Either one shows a nudge (on load and when you come back).
+const STALE_MS=3*86400000;
+function syncNudgeState(){
+  const m=syncMeta(),last=Math.max(m.lastExport||0,m.lastImport||0);
+  if(auto.enabled||!last)return null;                       // automatic sync handles it / never set up
+  if(m.syncedFp&&m.syncedFp!==localFp())return{kind:'unsent',key:'u'+localFp()};
+  if(Date.now()-last>STALE_MS)return{kind:'stale',key:'s'+last,last};
+  return null;
+}
+function refreshSyncNudge(){
+  const st=syncNudgeState(),el=$s('sync-nudge'),m=syncMeta();
+  $s('sync-status').classList.toggle('pending',!!st&&st.kind==='unsent');
+  if(!st||m.nudgeOff===st.key){el.hidden=true;return st}
+  $s('sync-nudge-text').textContent=st.kind==='unsent'
+    ?'This device has changes that aren’t in your sync file yet.'
+    :`Last synced ${fmtShort(st.last)}. If you logged pain on another device since then, import its sync file.`;
+  const go=$s('sync-nudge-go');
+  go.textContent=st.kind==='unsent'?'Export now':'Open sync';
+  go.onclick=()=>{
+    $s('sync-body').hidden=false;$s('sync-toggle').setAttribute('aria-expanded','true');
+    $s('sync-card').scrollIntoView({behavior:'smooth',block:'center'});
+    if(st.kind==='unsent')doExport();else el.hidden=true;
+  };
+  $s('sync-nudge-x').onclick=()=>{try{localStorage.setItem('bpt_sync_meta',JSON.stringify({...syncMeta(),nudgeOff:st.key}))}catch{}el.hidden=true};
+  el.hidden=false;
+  return st;
+}
 async function refreshSyncUI(){
   const m=syncMeta(),last=Math.max(m.lastExport||0,m.lastImport||0,m.lastAuto||0);
+  const nudge=refreshSyncNudge();
   $s('sync-status').textContent=auto.enabled&&auto.state==='on'?'Auto-sync on · '+fmtShort(m.lastAuto)
+    :nudge&&nudge.kind==='unsent'?'Changes not exported yet'
     :last?'Last synced '+fmtShort(last):'Not synced yet';
   $s('sync-meta').textContent=`Last export: ${fmtShort(m.lastExport)} · Last import: ${fmtShort(m.lastImport)}`;
   $s('sync-forget').hidden=!(await recallPassphrase());
@@ -2912,10 +3199,11 @@ async function doExport(){
   }
   setSyncBusy('Encrypting…');
   try{
+    const sentFp=localFp();
     const text=await encryptPayload(buildSyncPayload(),pass);
     if(remember)await rememberPassphrase(pass);
     setSyncBusy(null);resetExportBtn();
-    if(await shareOrDownload(new File([text],SYNC_FILE,{type:'text/plain'})))setSyncMeta({lastExport:Date.now()});
+    if(await shareOrDownload(new File([text],SYNC_FILE,{type:'text/plain'})))setSyncMeta({lastExport:Date.now(),syncedFp:sentFp});
   }catch(e){setSyncBusy(null);syncMsg('Export failed: '+e.message,'err')}
   refreshSyncUI();
 }
@@ -2944,7 +3232,7 @@ async function doImport(file){
   try{closeForm();stats=mergeSyncPayload(payload)}
   catch(e){syncMsg(e.message,'err');return}
   if(remember)await rememberPassphrase(pass);
-  setSyncMeta({lastImport:Date.now()});
+  setSyncMeta({lastImport:Date.now(),syncedFp:fpHash(syncFingerprint(payload))});
   renderLog();renderSummary();buildBody();
   const changed=stats.added+stats.updated+stats.removed;
   toast(changed?`Imported: ${stats.added} new, ${stats.updated} updated, ${stats.removed} removed`:'Already up to date');
@@ -3144,7 +3432,10 @@ async function syncNow(){
 
 $s('auto-now').addEventListener('click',()=>syncNow());
 $s('auto-change').addEventListener('click',chooseSyncFile);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&auto.enabled)scheduleAutoSync(500)});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(auto.enabled)scheduleAutoSync(500);else refreshSyncUI();
+});
 // INIT
 loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();when.init();refreshSyncUI();
 if(ST.entries.some(e=>!e.bodyType)){ST.entries.forEach(e=>{if(!e.bodyType)e.bodyType=currentBodyType});save()}
@@ -3194,7 +3485,7 @@ animate();
     (m==='welcome'?g('ht-ft'):g('setup-done')).focus();
   }
   function close(){
-    ov.hidden=true;setupOpen=false;mode=null;
+    ov.hidden=true;setupOpen=false;mode=null;setShapePanel(false);
     if(home)home.parent.insertBefore(viewer,home.next);
     holder.appendChild(prof);
     try{localStorage.setItem(KEY,'1')}catch{}
