@@ -100,6 +100,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .fg textarea{resize:vertical;min-height:64px}
 .fg input[readonly]{opacity:.7;cursor:default}
 .ftype-def{font-size:.78rem;line-height:1.5;color:var(--text-sec);margin-top:7px;max-width:62ch}
+.fg input.ftype-other{margin-top:8px}
 .ftype-more{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:2px}
 .ftype-more[aria-expanded="true"] .summ-chev{transform:rotate(90deg);color:var(--accent)}
 .ftype-guide:not([hidden]){display:flex;flex-direction:column;gap:4px;margin-top:6px;max-height:320px;overflow-y:auto;padding:4px;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in)}
@@ -351,7 +352,9 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         <option value="sharp" selected>Sharp</option><option value="shooting">Shooting</option><option value="stabbing">Stabbing</option>
         <option value="stinging">Stinging</option><option value="throbbing">Throbbing</option><option value="tingling">Tingling</option>
         <option value="tightness">Tightness</option><option value="weakness">Weakness</option><option value="swelling">Swelling</option>
+        <option value="other">Other (use my own words)</option>
       </select>
+        <input type="text" id="ftype-other" class="ftype-other" maxlength="40" placeholder="Describe it in a word or two, e.g. grinding" aria-label="Your own word for this pain" hidden>
         <p class="ftype-def" id="ftype-def" aria-live="polite"></p>
         <button type="button" class="params-toggle ftype-more" id="ftype-more" aria-expanded="false" aria-controls="ftype-guide">
           <svg class="summ-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
@@ -549,20 +552,27 @@ function loadModel(type,cb){
   });
 }
 
-function getBodyProportions(){
-  if(!ST.htFt||!ST.wt)return null;
-  // Shape uses the supported range; the summary still shows exactly what was entered.
-  const htIn=clamp(ST.htFt*12+(ST.htIn||0),36,107);
-  const wt=clamp(ST.wt,60,1000);
+// World height of the reference body (70 in male / 64 in female). The view is framed for a body
+// FRAME_HEADROOM times taller, so entering a height visibly makes the body shorter or taller.
+const BODY_H=90,FRAME_HEADROOM=1.1;
 
+function getBodyProportions(){
+  if(!ST.htFt&&!ST.wt)return null;
   const refHt=currentBodyType==='male'?70:64;
   const refWt=currentBodyType==='male'?170:145;
+  // Height alone resizes the body; weight alone reshapes it at the reference height.
+  // Shape uses the supported range; the summary still shows exactly what was entered.
+  const htIn=ST.htFt?clamp(ST.htFt*12+(ST.htIn||0),36,107):refHt;
   const htRatio=htIn/refHt;
-  const bmi=(wt/(htIn*htIn))*703;
-  const refBmi=(refWt/(refHt*refHt))*703;
-  const bmiRatio=bmi/refBmi;
+  let bmiRatio=1;
+  if(ST.wt){
+    const wt=clamp(ST.wt,60,1000);
+    const bmi=(wt/(htIn*htIn))*703;
+    const refBmi=(refWt/(refHt*refHt))*703;
+    bmiRatio=bmi/refBmi;
+  }
 
-  return {htRatio, bmiRatio, scaleY:lerp(1,htRatio,0.6)};
+  return {htRatio, bmiRatio, scaleY:htRatio};
 }
 
 // Fat distribution by height (0 = feet, 1 = top of head): [relY, weight, forward bias, backward bias]
@@ -812,9 +822,8 @@ function buildBody(){
     modelBBox={box,size,center};
 
     // Scale model to fit scene
-    const targetH=90;
     const props=getBodyProportions();
-    const baseSc=targetH/size.y*(props?props.scaleY:1);
+    const baseSc=BODY_H/size.y*(props?props.scaleY:1);
     model.scale.set(baseSc, baseSc, baseSc);
 
     bodyMesh=null;
@@ -1037,7 +1046,8 @@ function drawStackBadges(){
    ═══════════════════════════════════════════ */
 // Only the tapped spots are saved. The line between them is worked out here, as the shortest way across
 // the skin, so it follows every reshape the same way anchors do and the sync file stays small.
-const ROUTE_MAX=10,ROUTE_LIFT=0.5,ROUTE_R=0.32;
+// ROUTE_LIFT clears the line's dark edge (ROUTE_R*1.8) so no part of the tube sits under the skin.
+const ROUTE_MAX=10,ROUTE_LIFT=0.7,ROUTE_R=0.32,ROUTE_STEP=0.8;
 const rt={on:false,tracing:false,kind:'travels',points:[]};
 let routeGraph=null;
 
@@ -1047,7 +1057,10 @@ function getRouteGraph(){
   if(routeGraph&&routeGraph.geo===geo)return routeGraph;   // a rebuilt body has a new geometry
   geo.computeBoundingBox();
   const H=geo.boundingBox.max.y-geo.boundingBox.min.y,rep=buildWeld(geo,H*1e-5);
-  return routeGraph={geo,rep,nb:buildNeighbors(geo,rep),segs:new Map()};
+  // Triangles touching each welded vertex (as offsets into the index), for snapping a line back onto the skin.
+  const idx=geo.index?geo.index.array:null,tc=idx?idx.length:rep.length,vt=new Array(rep.length);
+  for(let t=0;t<tc;t+=3)for(let k=0;k<3;k++){const v=rep[idx?idx[t+k]:t+k];(vt[v]||(vt[v]=[])).push(t)}
+  return routeGraph={geo,rep,nb:buildNeighbors(geo,rep),vt,segs:new Map()};
 }
 
 // The body vertex a spot sits on (seam-welded, so paths cross UV seams).
@@ -1091,24 +1104,87 @@ function surfacePath(a,b){
   return out.reverse();
 }
 
-// World-space points for the line from spot p to spot q, lifted just off the skin and smoothed.
+// World-space points for the line from spot p to spot q: the shortest way across the skin, smoothed,
+// and held a fixed ROUTE_LIFT above the surface along its whole length.
+// Vertex-to-vertex paths zigzag, but plain smoothing pulls a line inward wherever the body curves (it sank
+// into thighs, flanks and limbs). So every smoothing pass is followed by snapping each point back onto the
+// nearest skin triangle, and only then is the line lifted off along the surface normal.
 function surfaceLine(p,q){
-  const g=getRouteGraph(),va=spotVertex(p),vb=spotVertex(q),key=va+'>'+vb;
-  if(g.segs.has(key))return g.segs.get(key);
-  const pos=g.geo.attributes.position,nor=g.geo.attributes.normal,m=bodyMesh.matrixWorld;
+  const g=getRouteGraph(),va=spotVertex(p),vb=spotVertex(q);
   const wp=entryWorld(p),wq=entryWorld(q);
-  const lift=w=>w.point.clone().addScaledVector(w.normal.clone().normalize(),ROUTE_LIFT);
-  const pts=[lift(wp)];
-  const path=surfacePath(va,vb)||[];
-  path.forEach(v=>{
-    const pt=new THREE.Vector3().fromBufferAttribute(pos,v).applyMatrix4(m);
-    const n=nor?new THREE.Vector3().fromBufferAttribute(nor,v).transformDirection(m):new THREE.Vector3();
-    pts.push(pt.addScaledVector(n,ROUTE_LIFT));
-  });
-  pts.push(lift(wq));
-  // Vertex-to-vertex paths zigzag; a light smooth keeps the ends pinned to the tapped spots.
-  for(let it=0;it<3;it++)for(let i=1;i<pts.length-1;i++)pts[i].multiplyScalar(0.5).addScaledVector(pts[i-1],0.25).addScaledVector(pts[i+1],0.25);
-  const clean=pts.filter((pt,i)=>i===0||pt.distanceTo(pts[i-1])>0.05);
+  const r1=v=>v.x.toFixed(1)+','+v.y.toFixed(1)+','+v.z.toFixed(1);
+  const key=va+'>'+vb+'|'+r1(wp.point)+'|'+r1(wq.point);
+  if(g.segs.has(key))return g.segs.get(key);
+  const pos=g.geo.attributes.position,nor=g.geo.attributes.normal,idx=g.geo.index?g.geo.index.array:null;
+  const m=bodyMesh.matrixWorld,inv=new THREE.Matrix4().copy(m).invert();
+  const sc=new THREE.Vector3().setFromMatrixScale(m).x||1;   // mesh units → world units
+  const liftEnd=w=>w.point.clone().addScaledVector(w.normal.clone().normalize(),ROUTE_LIFT);
+  const path=surfacePath(va,vb);
+  let out;
+  if(!path){
+    out=[liftEnd(wp),liftEnd(wq)];   // no way across the skin between them (separate mesh pieces)
+  }else{
+    // 1. On-skin polyline in mesh space: tapped spot, the path's vertices, tapped spot. u = position along the path.
+    const raw=[{v:wp.point.clone().applyMatrix4(inv),u:0}];
+    path.forEach((vi,i)=>raw.push({v:new THREE.Vector3().fromBufferAttribute(pos,vi),u:i}));
+    raw.push({v:wq.point.clone().applyMatrix4(inv),u:path.length-1});
+    // 2. Resample at an even spacing so smoothing and snapping act the same everywhere.
+    const step=ROUTE_STEP/sc,pts=[raw[0]];
+    let carry=0;
+    for(let i=1;i<raw.length;i++){
+      const a=raw[i-1],b=raw[i],len=a.v.distanceTo(b.v);
+      if(len<1e-9)continue;
+      let d=step-carry;
+      for(;d<len;d+=step)pts.push({v:a.v.clone().lerp(b.v,d/len),u:lerp(a.u,b.u,d/len)});
+      carry=len-(d-step);
+    }
+    const end=raw[raw.length-1];
+    if(pts.length>1&&pts[pts.length-1].v.distanceTo(end.v)<step*0.4)pts.pop();
+    pts.push(end);
+    // 3. Smooth, then snap back onto the skin. Candidate triangles are the ones around the nearby path vertices.
+    const tri=new THREE.Triangle(),hit=new THREE.Vector3(),bc=new THREE.Vector3(),W=3;
+    const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+    const snap=pt=>{
+      let best=Infinity,bt=-1;
+      const lo=Math.max(0,Math.floor(pt.u)-W),hi=Math.min(path.length-1,Math.ceil(pt.u)+W);
+      for(let i=lo;i<=hi;i++){
+        const list=g.vt[path[i]];if(!list)continue;
+        for(const t of list){
+          tri.a.fromBufferAttribute(pos,idx?idx[t]:t);tri.b.fromBufferAttribute(pos,idx?idx[t+1]:t+1);tri.c.fromBufferAttribute(pos,idx?idx[t+2]:t+2);
+          tri.closestPointToPoint(pt.v,hit);
+          const d=hit.distanceToSquared(pt.v);
+          if(d<best){best=d;bt=t;A.copy(hit)}
+        }
+      }
+      if(bt<0)return;
+      pt.v.copy(A);pt.t=bt;
+    };
+    for(let it=0;it<4;it++){
+      const prev=pts.map(x=>x.v.clone());
+      for(let i=1;i<pts.length-1;i++){
+        pts[i].v.copy(prev[i]).multiplyScalar(0.5).addScaledVector(prev[i-1],0.25).addScaledVector(prev[i+1],0.25);
+        snap(pts[i]);
+      }
+    }
+    // 4. Lift off along the surface normal (blended across the triangle so the line doesn't facet) and go to world space.
+    const n=new THREE.Vector3(),na=new THREE.Vector3(),nb2=new THREE.Vector3(),nc=new THREE.Vector3();
+    out=pts.map((pt,i)=>{
+      if(i===0)return liftEnd(wp);
+      if(i===pts.length-1)return liftEnd(wq);
+      if(pt.t===undefined)snap(pt);
+      const t=pt.t,ia=idx?idx[t]:t,ib=idx?idx[t+1]:t+1,ic=idx?idx[t+2]:t+2;
+      A.fromBufferAttribute(pos,ia);B.fromBufferAttribute(pos,ib);C.fromBufferAttribute(pos,ic);
+      THREE.Triangle.getNormal(A,B,C,n);
+      if(nor&&THREE.Triangle.getBarycoord(pt.v,A,B,C,bc)){
+        na.fromBufferAttribute(nor,ia);nb2.fromBufferAttribute(nor,ib);nc.fromBufferAttribute(nor,ic);
+        const sm=na.multiplyScalar(bc.x).addScaledVector(nb2,bc.y).addScaledVector(nc,bc.z);
+        if(sm.lengthSq()>1e-8)n.copy(sm.normalize());
+      }
+      const world=pt.v.clone().applyMatrix4(m);
+      return world.addScaledVector(n.transformDirection(m),ROUTE_LIFT);
+    });
+  }
+  const clean=out.filter((pt,i)=>i===0||pt.distanceTo(out[i-1])>0.05);
   if(clean.length<2)clean.push(clean[0].clone().add(new THREE.Vector3(0,0.01,0)));
   g.segs.set(key,clean);
   return clean;
@@ -1163,11 +1239,16 @@ function drawRoute(g,spots,kind,hex,entryId){
     }else if(last){
       // Arrowhead lying along the last stretch of the line, tip on the final spot.
       const l=lines[lines.length-1],tip=l[l.length-1],back=l[Math.max(0,l.length-4)];
+      // Kept flat against the skin: pointing along the surface and squashed along its normal, so the
+      // arrowhead rests on the body instead of half of it sinking in.
       const dir=tip.clone().sub(back);
-      if(dir.lengthSq()<1e-6)dir.copy(n);
+      dir.addScaledVector(n,-dir.dot(n));
+      if(dir.lengthSq()<1e-6)dir.set(n.y,n.z,n.x).addScaledVector(n,-(n.y*n.x+n.z*n.y+n.x*n.z));
       dir.normalize();
+      const side=new THREE.Vector3().crossVectors(dir,n).normalize();
       const cone=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.4,16),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35}));
-      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
+      cone.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,dir,n));
+      cone.scale.set(1,1,0.5);
       cone.position.copy(tip).addScaledVector(dir,-1.2);
       g.add(cone);
       if(entryId){cone.userData.entryId=entryId;cone.userData.pick='line';pinHitMeshes.push(cone)}
@@ -1459,25 +1540,32 @@ let theta=0,phi=Math.PI/2.15,dist=160;
 let targetTheta=0,targetPhi=Math.PI/2.15;
 let animating=false,animProg=0,startTheta=0,startPhi=0;
 let lookY=45,minDist=50,maxDist=200,userZoomed=false;
+let fitDist=160,bodyCY=45,frameCY=45;
 
 function fitCamera(){
   if(!modelBBox||!camera)return;
   const s=modelBBox.size;
   const vFov=THREE.MathUtils.degToRad(camera.fov);
   const tanHalf=Math.tan(vFov/2);
-  const margin=1.12;
-  const dH=(s.y*margin/2)/tanHalf;
-  const dW=(Math.max(s.x,s.z)*margin/2)/(tanHalf*camera.aspect);
-  const fit=Math.max(dH,dW)+s.z/2;
-  lookY=modelBBox.center.y;
-  minDist=fit*0.35;
-  maxDist=fit*1.4;
-  if(!userZoomed)dist=fit;
+  const margin=1.06;
+  // Frame a fixed tall-body box instead of this body's own box. Fitting to the body itself zoomed every
+  // height back up to the same size on screen; this way a shorter body looks shorter, feet on the same floor.
+  const k=Math.max(1,BODY_H*FRAME_HEADROOM/s.y);
+  const dH=(s.y*k*margin/2)/tanHalf;
+  const dW=(Math.max(s.x,s.z)*k*margin/2)/(tanHalf*camera.aspect);
+  fitDist=Math.max(dH,dW)+s.z/2;
+  bodyCY=modelBBox.center.y;
+  frameCY=s.y*k/2;
+  minDist=fitDist/k*0.35;   // closest zoom stays relative to the body, so a small body can still be inspected
+  maxDist=fitDist*1.4;
+  if(!userZoomed)dist=fitDist;
   dist=clamp(dist,minDist,maxDist);
   updateCamera();
 }
 
 function updateCamera(){
+  // Fully zoomed out the aim is the frame's centre (feet planted); zooming in drifts it to the body's own centre.
+  lookY=lerp(bodyCY,frameCY,clamp((dist-minDist)/((fitDist-minDist)||1),0,1));
   camera.position.x=dist*Math.sin(phi)*Math.sin(theta);
   camera.position.y=dist*Math.cos(phi)+lookY;
   camera.position.z=dist*Math.sin(phi)*Math.cos(theta);
@@ -1904,7 +1992,7 @@ function openForm(label,viewName){
   document.getElementById('ftitle').textContent='Log Pain';
   document.getElementById('floc').value=`${label} — ${viewName}`;
   document.getElementById('fsev').value=5;updateSev(5);
-  document.getElementById('ftype').value='sharp';resetRoute();updatePainDef();setPainGuide(false);
+  document.getElementById('ftype').value='sharp';document.getElementById('ftype-other').value='';resetRoute();updatePainDef();setPainGuide(false);
   document.getElementById('fdur').value='';
   document.getElementById('fnotes').value='';
   when.start();
@@ -1920,7 +2008,7 @@ function editEntry(entry){
   document.getElementById('ftitle').textContent='Edit Entry';
   document.getElementById('floc').value=`${entry.label} — ${entry.viewLabel}`;
   document.getElementById('fsev').value=entry.severity;updateSev(entry.severity);
-  document.getElementById('ftype').value=entry.painType;loadRoute(entry.route);updatePainDef();setPainGuide(false);
+  document.getElementById('ftype').value=entry.painType;document.getElementById('ftype-other').value=entry.painOther||'';loadRoute(entry.route);updatePainDef();setPainGuide(false);
   document.getElementById('fdur').value=entry.duration;
   document.getElementById('fnotes').value=entry.notes;
   when.load(entry.date,entry.timeApprox);
@@ -1934,6 +2022,7 @@ function saveEntry(){
   const loc=document.getElementById('floc').value;
   const sev=+document.getElementById('fsev').value;
   const pt=document.getElementById('ftype').value;
+  const other=pt==='other'?document.getElementById('ftype-other').value.trim().slice(0,40):'';
   const dur=document.getElementById('fdur').value.trim();
   const notes=document.getElementById('fnotes').value.trim();
   const dt=when.getLocalString(),approx=when.approx();
@@ -1942,7 +2031,7 @@ function saveEntry(){
 
   if(ST.editId){
     const e=ST.entries.find(x=>x.id===ST.editId);
-    if(e){e.severity=sev;e.painType=pt;e.duration=dur;e.notes=notes;e.date=dt;e.timeApprox=approx;e.label=loc.split(' — ')[0];e.updatedAt=Date.now()}
+    if(e){e.severity=sev;e.painType=pt;e.painOther=other;e.duration=dur;e.notes=notes;e.date=dt;e.timeApprox=approx;e.label=loc.split(' — ')[0];e.updatedAt=Date.now()}
   }else if(ST.clickPt){
     const p=ST.clickPt.point;
     ST.entries.push({
@@ -1955,7 +2044,7 @@ function saveEntry(){
       anchor:ST.clickPt.anchor||null,
       bodyType:currentBodyType,
       regionVer:1,
-      severity:sev,painType:pt,duration:dur,notes,date:dt,timeApprox:approx,resolved:false,
+      severity:sev,painType:pt,painOther:other,duration:dur,notes,date:dt,timeApprox:approx,resolved:false,
       updatedAt:Date.now()
     });
   }
@@ -1968,6 +2057,8 @@ function sevColor(v){return v<=3?'var(--green)':v<=6?'var(--amber)':'var(--red)'
 function updateSev(v){v=+v;document.getElementById('sbadge').textContent=v;document.getElementById('sbadge').style.background=sevColor(v);document.getElementById('sev-fill').style.width=(v*10)+'%';document.getElementById('sev-fill').style.background=sevColor(v)}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):''}
+// "Other" entries show the user's own word. `own` marks it as theirs where a doctor reads it.
+function painLabel(e,own){return e.painType==='other'?(e.painOther?cap(e.painOther)+(own?' (own words)':''):'Other'):cap(e.painType)}
 function fmtDate(d){
   if(!d)return'—';
   const x=new Date(d);
@@ -2001,7 +2092,7 @@ function renderLog(){
       <div class="log-dot" style="color:${sevColor(e.severity)};background:currentColor"></div>
       <div class="log-body">
         <div class="log-loc">${esc(e.label)}${e.route?esc(routeTail(e)):''} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span>${e.route?`<span class="log-tag">${e.route.kind==='referred'?'also felt at':'travels'}</span>`:''}</div>
-        <div class="log-meta">${esc(cap(e.painType))} · ${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtWhen(e))}</div>
+        <div class="log-meta">${esc(painLabel(e))} ·${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtWhen(e))}</div>
         ${e.notes?`<div class="log-note">${esc(e.notes)}</div>`:''}
       </div>
       <div class="log-acts">
@@ -2018,7 +2109,7 @@ function renderLog(){
       if(!e)return;
       openConfirm({
         title:'Delete this entry?',
-        msg:`${e.label} — ${e.severity}/10 ${cap(e.painType)}, ${fmtWhen(e)}. This can't be undone.`,
+        msg:`${e.label} — ${e.severity}/10 ${painLabel(e)}, ${fmtWhen(e)}. This can't be undone.`,
         ok:'Delete',returnFocus:document.getElementById('hist-close'),
         onOk:()=>{
           if(ST.editId===e.id)closeForm();
@@ -2041,7 +2132,7 @@ function renderSummary(){
     t+=`ACTIVE PAIN POINTS (${active.length})\n\n`;
     active.sort((a,b)=>b.severity-a.severity).forEach((e,i)=>{
       t+=`${i+1}. ${e.label} (${e.viewLabel})\n`;
-      t+=`   Severity: ${e.severity}/10 — ${cap(e.painType)}\n`;
+      t+=`   Severity: ${e.severity}/10 — ${painLabel(e,true)}\n`;
       if(e.route)t+=`   ${e.route.kind==='referred'?'Also felt at: '+e.route.points.map(p=>p.label).join(', '):'Travels to: '+e.route.points.map(p=>p.label).join(' → ')}\n`;
       if(e.duration)t+=`   Duration: ${e.duration}\n`;
       t+=`   Recorded: ${fmtWhen(e)}\n`;
@@ -2051,7 +2142,7 @@ function renderSummary(){
     t+=`OVERVIEW\n  Most severe: ${Math.max(...active.map(e=>e.severity))}/10\n`;
     t+=`  Areas affected: ${[...new Set(active.flatMap(e=>[e.label,...(e.route?e.route.points.map(p=>p.label):[])]))].join(', ')}\n  Total: ${active.length}\n\n`;
   }else t+='No active pain points.\n\n';
-  if(resolved.length){t+=`RESOLVED (${resolved.length})\n`;resolved.forEach(e=>{t+=`  · ${e.label} — was ${e.severity}/10 ${cap(e.painType)} (${fmtWhen(e)})\n`})}
+  if(resolved.length){t+=`RESOLVED (${resolved.length})\n`;resolved.forEach(e=>{t+=`  · ${e.label} — was ${e.severity}/10 ${painLabel(e,true)} (${fmtWhen(e)})\n`})}
   body.textContent=t;
 }
 
@@ -2147,6 +2238,7 @@ function cleanEntry(e){
     bodyType:e.bodyType==='female'?'female':'male',regionVer:num(e.regionVer),
     severity:clamp(Math.round(num(e.severity))||1,1,10),
     painType:PAIN_TYPES.includes(e.painType)?e.painType:PAIN_TYPES[0],
+    painOther:e.painType==='other'?str(e.painOther,40):'',
     duration:str(e.duration,200),notes:str(e.notes,2000),
     date:typeof e.date==='string'&&DATE_RE.test(e.date)?e.date:dtp.getLocalString(),
     timeApprox:Object.hasOwn(DAY_PARTS,e.timeApprox)?e.timeApprox:null,
@@ -2281,9 +2373,16 @@ function refreshBmiHint(){
   const hint=document.getElementById('bmi-hint');
   const inches=ST.htFt*12+(ST.htIn||0);
   if(ST.htFt&&ST.wt&&inches>0){
+    // BMI is weight and height only. Age doesn't enter the number, but the adult ranges below
+    // aren't meant for under-20s (those are read against age-and-sex growth charts instead).
     const bmiVal=(ST.wt/(inches*inches))*703;
     const cat=bmiVal<18.5?'Underweight':bmiVal<25?'Normal':bmiVal<30?'Overweight':'Obese';
-    hint.textContent=`BMI: ${bmiVal.toFixed(1)} (${cat})`+(ST.wt>1000?' · model shape shown at 1000 lbs max':'');
+    const minor=ST.age>0&&ST.age<20;
+    const outOfRange=ST.wt>1000||ST.wt<60||inches<36||inches>107;
+    hint.textContent=`BMI: ${bmiVal.toFixed(1)} `+(minor?'· adult ranges don’t apply under 20':`(${cat})`)
+      +(outOfRange?' · model shown at the nearest size it supports':'');
+  }else if(ST.htFt||ST.wt){
+    hint.textContent=`Add your ${ST.htFt?'weight':'height'} to see BMI. Use the toggle above to switch body model.`;
   }else{
     hint.textContent='Enter your measurements for the doctor summary. Use the toggle above to switch body model.';
   }
@@ -2420,7 +2519,8 @@ const PAIN_DICT={
 const painGuide=document.getElementById('ftype-guide'),painMore=document.getElementById('ftype-more');
 function updatePainDef(){
   const v=document.getElementById('ftype').value,d=PAIN_DICT[v];
-  document.getElementById('ftype-def').textContent=d?d.def:'';
+  document.getElementById('ftype-other').hidden=v!=='other';
+  document.getElementById('ftype-def').textContent=d?d.def:v==='other'?'None of the listed types fit. Say what it feels like in your own words; it is saved exactly as you type it.':'';
   document.getElementById('route-nudge').hidden=!(v==='shooting'&&!rt.on);
   painGuide.querySelectorAll('.ftype-opt').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
 }
@@ -2436,7 +2536,7 @@ function setPainGuide(open){painGuide.hidden=!open;painMore.setAttribute('aria-e
   b.addEventListener('click',()=>{const sel=document.getElementById('ftype');sel.value=o.value;updatePainDef();setPainGuide(false);sel.focus()});
   painGuide.appendChild(b);
 });
-document.getElementById('ftype').addEventListener('change',updatePainDef);
+document.getElementById('ftype').addEventListener('change',e=>{updatePainDef();if(e.target.value==='other')document.getElementById('ftype-other').focus()});
 painMore.addEventListener('click',()=>{
   setPainGuide(painGuide.hidden);
   if(!painGuide.hidden){const cur=painGuide.querySelector('[aria-pressed="true"]');if(cur)cur.scrollIntoView({block:'nearest'})}
@@ -2514,7 +2614,7 @@ function openPickMenu(list,x,y){
     const dot=document.createElement('span');dot.className='pick-dot';dot.style.background=sevColor(e.severity);
     const txt=document.createElement('div'),t=document.createElement('b'),meta=document.createElement('small');
     t.textContent=e.label+(e.route?routeTail(e):'');
-    meta.textContent=`${e.severity}/10 · ${cap(e.painType)} · ${fmtWhen(e)}`;
+    meta.textContent=`${e.severity}/10 · ${painLabel(e)} · ${fmtWhen(e)}`;
     txt.append(t,meta);b.append(dot,txt);
     b.addEventListener('click',()=>{closePickMenu();editEntry(e)});
     wrap.appendChild(b);
