@@ -225,6 +225,9 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .pick-row b{display:block;font-size:.8rem;font-weight:600}
 .pick-row small{display:block;font-size:.7rem;color:var(--text-muted);margin-top:1px}
 .trace-bar:not([hidden]){position:absolute;left:12px;right:12px;bottom:12px;z-index:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:40px;background:var(--surface);box-shadow:var(--neu-up),0 6px 18px rgba(0,0,0,.18);cursor:default}
+.trace-bar:not([hidden]){flex-wrap:wrap;border-radius:24px;padding:10px 10px 10px 14px}
+.trace-kind{flex:1 1 100%;display:flex;gap:6px}
+.trace-kind .when-chip{flex:1;min-height:40px;font-size:.78rem}
 .trace-msg{flex:1;min-width:0;font-size:.78rem;font-weight:500;color:var(--text)}
 .trace-btn{padding:8px 16px;border:none;border-radius:40px;background:var(--card);box-shadow:var(--neu-soft);color:var(--text-sec);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;min-height:40px}
 .trace-btn.done{background:var(--accent);color:var(--on-accent)}
@@ -432,6 +435,10 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         <div class="pick-list" id="pick-list"></div>
       </div>
       <div class="trace-bar" id="trace-bar" hidden>
+        <div class="trace-kind" id="trace-kind" role="group" aria-label="What the next tap adds">
+          <button type="button" class="when-chip" data-kind="travels">Travels to</button>
+          <button type="button" class="when-chip" data-kind="referred">Also felt at</button>
+        </div>
         <span class="trace-msg" id="trace-msg" aria-live="polite"></span>
         <button type="button" class="trace-btn" id="trace-undo">Undo</button>
         <button type="button" class="trace-btn done" id="trace-done">Done</button>
@@ -475,6 +482,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
             <button type="button" class="when-chip" data-kind="travels">Travels to</button>
             <button type="button" class="when-chip" data-kind="referred">Also felt at</button>
           </div>
+          <p class="welcome-note" style="margin:0 0 6px">Pick what the next taps add. One entry can have both.</p>
           <p class="route-sum" id="route-sum" aria-live="polite"></p>
           <div class="route-acts">
             <button type="button" class="btn-ghost route-btn" id="route-add">Add points</button>
@@ -1218,7 +1226,7 @@ function renderMarkers3D(){
     stud.userData.pick=hit.userData.pick='marker';
     pinHitMeshes.push(stud,hit);
     // While this entry's route is being edited, the draft replaces the saved line.
-    if(e.route&&!(rt.on&&e.id===ST.editId))drawRoute(g,[e,...e.route.points],e.route.kind,hex,e.id);
+    if(e.route&&!(rt.on&&e.id===ST.editId))drawRouteParts(g,e,e.route,hex,e.id);
     bodyGroup.add(g);
   });
   drawStackBadges();
@@ -1423,13 +1431,13 @@ function routeTube(pts,radius,color,alphaAt,order,from,total){
 // referred: ("also felt at") each other spot is its own dashed-ring node, tied back to the main spot by a thin
 //           dashed link with no arrows: connected, but clearly not pain that travelled there.
 // entryId set = saved entry (clickable); unset = the draft being traced.
-const ARROW_GAP=6.5;
+const ARROW_GAP=5.5;
 function drawRoute(g,spots,kind,hex,entryId){
   if(!getRouteGraph()||spots.length<2)return;
   const color=new THREE.Color(hex),dark=new THREE.Color(0x061018);
   const solid=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.35});
-  const arrowFill=new THREE.MeshBasicMaterial({color:color.clone().lerp(new THREE.Color(0xffffff),0.82),toneMapped:false});
-  const arrowEdge=new THREE.MeshBasicMaterial({color:dark,toneMapped:false});
+  const arrowFill=new THREE.MeshBasicMaterial({color:color.clone().lerp(new THREE.Color(0xffffff),0.85),toneMapped:false,side:THREE.DoubleSide});
+  const arrowEdge=new THREE.MeshBasicMaterial({color:dark,toneMapped:false,side:THREE.DoubleSide});
   const pickable=(m,pick)=>{if(entryId){m.userData.entryId=entryId;m.userData.pick=pick;pinHitMeshes.push(m)}};
   const stud=(pt,n,r)=>{
     const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),solid);
@@ -1443,16 +1451,18 @@ function drawRoute(g,spots,kind,hex,entryId){
     if(dir.lengthSq()<1e-6)dir.set(n.y,n.z,n.x).addScaledVector(n,-(n.y*n.x+n.z*n.y+n.x*n.z));
     dir.normalize();
     const side=new THREE.Vector3().crossVectors(dir,n).normalize();
-    // Light arrowhead on a dark backing, sitting just above the line so the line can't hide it
-    const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,dir,n));
+    // A flat, notched arrowhead (➤) drawn on the skin: light on a dark backing so it reads on any colour,
+    // and held just above the line so the line can't hide it. r = half width, h = length, tip at `tip`.
     const mk=(mat,k,lift)=>{
-      const c=new THREE.Mesh(new THREE.ConeGeometry(r*k,h*k,16),mat);
-      c.quaternion.copy(q);c.scale.set(1,1,0.45);
-      c.position.copy(tip).addScaledVector(dir,-h/2).addScaledVector(n,lift);
-      g.add(c);return c;
+      const c=tip.clone().addScaledVector(dir,-h/2).addScaledVector(n,lift),L=h*k/2,W=r*k;
+      const P=(f,sd)=>c.clone().addScaledVector(dir,f).addScaledVector(side,sd);
+      const v=[P(L,0),P(-L,W),P(-L*0.45,0),P(-L,-W)];
+      const geo=new THREE.BufferGeometry().setFromPoints([v[0],v[1],v[2],v[0],v[2],v[3]]);
+      const m=new THREE.Mesh(geo,mat);m.renderOrder=3;
+      g.add(m);return m;
     };
-    mk(arrowEdge,1.32,ROUTE_R*0.7);
-    return mk(arrowFill,1,ROUTE_R*1.1);
+    mk(arrowEdge,1.38,ROUTE_R*1.15);
+    return mk(arrowFill,1,ROUTE_R*1.35);
   };
   const hitSphere=(w,n,p)=>{
     if(!entryId)return;
@@ -1496,15 +1506,17 @@ function drawRoute(g,spots,kind,hex,entryId){
         const t=(next-run)/seg,pos=l[k-1].clone().lerp(l[k],t);
         const n=(l[k].n||l[k-1].n||new THREE.Vector3(0,0,1)).clone().normalize();
         const dir=l[Math.min(l.length-1,k+1)].clone().sub(l[Math.max(0,k-2)]);
-        arrow(pos.addScaledVector(dir.clone().normalize(),1.1),dir,n,1.0,2.2);
+        arrow(pos.addScaledVector(dir.clone().normalize(),1.0),dir,n,0.85,2.0);
         next+=ARROW_GAP;
       }
       run+=seg;
     }
     // A bigger arrowhead arriving at each stop
     const w=entryWorld(spots[i+1]),n=w.normal.clone().normalize();
-    const tip=l[l.length-1],back=l[Math.max(0,l.length-4)];
-    pickable(arrow(tip,tip.clone().sub(back),n,1.35,3.0),'line');
+    // aimed along the last stretch of the line, lying on the skin just before the stop (the tapped face itself
+    // can tilt away and twist the arrow)
+    const tip=l[l.length-1],back=l[Math.max(0,l.length-6)],near=l[Math.max(0,l.length-3)];
+    pickable(arrow(tip,tip.clone().sub(back),(near.n||n).clone().normalize(),1.15,2.7),'line');
     hitSphere(w,n,spots[i+1]);
   });
 }
@@ -1520,7 +1532,7 @@ function drawRoutePreview(){
   if(!rt.on||!rt.points.length||!bodyGroup)return;
   const o=routeOrigin();if(!o)return;
   const g=new THREE.Group();g.userData={isRoutePreview:true};
-  drawRoute(g,[o,...rt.points],rt.kind,PREVIEW_HEX);
+  drawRouteParts(g,o,{kind:'travels',points:rt.points},PREVIEW_HEX);
   bodyGroup.add(g);
 }
 
@@ -2524,7 +2536,7 @@ function renderLog(){
     <div class="log-item${e.resolved?' resolved':''}" data-id="${esc(e.id)}">
       <div class="log-dot" style="color:${sevColor(e.severity)};background:currentColor"></div>
       <div class="log-body">
-        <div class="log-loc">${esc(e.label)}${e.route?esc(routeTail(e)):''} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span>${e.route?`<span class="log-tag">${e.route.kind==='referred'?'also felt at':'travels'}</span>`:''}</div>
+        <div class="log-loc">${esc(e.label)}${e.route?esc(routeTail(e)):''} <span style="color:var(--text-muted);font-weight:400;font-size:.7rem">— ${esc(e.viewLabel)}</span>${e.route?`<span class="log-tag">${routeTag(e.route)}</span>`:''}</div>
         <div class="log-meta">${esc(painLabel(e))} ·${esc(String(e.severity))}/10${e.duration?' · '+esc(e.duration):''} · ${esc(fmtWhen(e))}</div>
         ${e.notes?`<div class="log-note">${esc(e.notes)}</div>`:''}
       </div>
@@ -2566,7 +2578,11 @@ function renderSummary(){
     active.sort((a,b)=>b.severity-a.severity).forEach((e,i)=>{
       t+=`${i+1}. ${e.label} (${e.viewLabel})\n`;
       t+=`   Severity: ${e.severity}/10 — ${painLabel(e,true)}\n`;
-      if(e.route)t+=`   ${e.route.kind==='referred'?'Also felt at: '+e.route.points.map(p=>p.label).join(', '):'Travels to: '+e.route.points.map(p=>p.label).join(' → ')}\n`;
+      if(e.route){
+        const{travel,also}=routeParts(e.route);
+        if(travel.length)t+=`   Travels to: ${travel.map(p=>p.label).join(' → ')}\n`;
+        if(also.length)t+=`   Also felt at: ${also.map(p=>p.label).join(', ')}\n`;
+      }
       if(e.duration)t+=`   Duration: ${e.duration}\n`;
       t+=`   Recorded: ${fmtWhen(e)}\n`;
       if(e.notes)t+=`   Notes: ${e.notes}\n`;
@@ -2664,7 +2680,7 @@ function cleanEntry(e){
   const vec=v=>v&&typeof v==='object'?{x:num(v.x),y:num(v.y),z:num(v.z)}:{x:0,y:0,z:0};
   const anchor=an=>an&&typeof an==='object'&&['mi','a','b','c'].every(k=>Number.isInteger(an[k])&&an[k]>=0)&&['u','v','w'].every(k=>typeof an[k]==='number'&&Number.isFinite(an[k]))
     ?{mi:an.mi,a:an.a,b:an.b,c:an.c,u:an.u,v:an.v,w:an.w}:null;
-  const r=e.route,spot=q=>q&&typeof q==='object'?{point:vec(q.point),normal:vec(q.normal),anchor:anchor(q.anchor),regionId:str(q.regionId,100),label:str(q.label,120)||'Body'}:null;
+  const r=e.route,spot=q=>q&&typeof q==='object'?{point:vec(q.point),normal:vec(q.normal),anchor:anchor(q.anchor),regionId:str(q.regionId,100),label:str(q.label,120)||'Body',...(q.also===true?{also:true}:{})}:null;
   const rpts=r&&typeof r==='object'&&(r.kind==='travels'||r.kind==='referred')&&Array.isArray(r.points)?r.points.slice(0,ROUTE_MAX-1).map(spot).filter(Boolean):[];
   return{
     id:e.id,regionId:str(e.regionId,100),label:str(e.label,120)||'Body',viewLabel:str(e.viewLabel,40),
@@ -2995,14 +3011,30 @@ painMore.addEventListener('click',()=>{
 updatePainDef();
 
 /* --- Route controls: "This pain travels or is felt elsewhere" --- */
+// One entry can hold both kinds. A point marked `also` is another place the pain is felt; the rest are the path
+// it travels, in order. (Older entries marked the whole route "referred" instead of each point.)
+function routeParts(route){
+  const travel=[],also=[];
+  (route.points||[]).forEach(p=>((route.kind==='referred'||p.also)?also:travel).push(p));
+  return{travel,also};
+}
+function drawRouteParts(g,origin,route,hex,entryId){
+  const{travel,also}=routeParts(route);
+  if(travel.length)drawRoute(g,[origin,...travel],'travels',hex,entryId);
+  if(also.length)drawRoute(g,[origin,...also],'referred',hex,entryId);
+}
+function routeTag(route){const{travel,also}=routeParts(route);return travel.length&&also.length?'travels + also felt at':also.length?'also felt at':'travels'}
 const $r=id=>document.getElementById(id);
-function routeTail(e){const l=e.route.points.map(p=>p.label);return e.route.kind==='referred'?' + '+l.join(', '):' → '+l.join(' → ')}
+function routeTail(e){const{travel,also}=routeParts(e.route);return(travel.length?' → '+travel.map(p=>p.label).join(' → '):'')+(also.length?' + '+also.map(p=>p.label).join(', '):'')}
 function renderRouteUI(){
   $r('route-on').checked=rt.on;$r('route-panel').hidden=!rt.on;
-  $r('route-kind').querySelectorAll('.when-chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===rt.kind)));
+  document.querySelectorAll('#route-kind .when-chip,#trace-kind .when-chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===rt.kind)));
   const o=routeOrigin(),start=o?o.label:'Start',labels=rt.points.map(p=>p.label),sum=$r('route-sum');
-  if(labels.length){sum.textContent=rt.kind==='referred'?`${start} · also felt at ${labels.join(', ')}`:[start,...labels].join(' → ');sum.classList.remove('empty')}
-  else{sum.textContent=rt.kind==='referred'?'Tap the body wherever else you feel it.':'Tap the body where the pain travels to.';sum.classList.add('empty')}
+  if(labels.length){
+    const{travel,also}=routeParts({kind:'travels',points:rt.points});
+    sum.textContent=[start,...travel.map(p=>p.label)].join(' → ')+(also.length?' · also felt at '+also.map(p=>p.label).join(', '):'');
+    sum.classList.remove('empty');
+  }else{sum.textContent=rt.kind==='referred'?'Tap the body wherever else you feel it.':'Tap the body where the pain travels to.';sum.classList.add('empty')}
   const add=$r('route-add');add.textContent=rt.tracing?'Done':'Add points';add.classList.toggle('on',rt.tracing);
   $r('route-undo').disabled=$r('trace-undo').disabled=$r('route-clear').disabled=!rt.points.length;
   const n=rt.points.length+1;
@@ -3020,21 +3052,22 @@ function setTracing(on){
 }
 function resetRoute(){rt.on=false;rt.tracing=false;rt.kind='travels';rt.points=[];refreshRoute()}
 function loadRoute(route){
-  rt.on=!!route;rt.tracing=false;rt.kind=route?route.kind:'travels';
-  rt.points=route?route.points.map(p=>({...p})):[];
+  rt.on=!!route;rt.tracing=false;
+  rt.points=route?route.points.map(p=>{const q={...p};if(route.kind==='referred'||p.also)q.also=true;else delete q.also;return q}):[];
+  rt.kind=rt.points.length&&rt.points.every(p=>p.also)?'referred':'travels';
   refreshRoute();
 }
 function addRoutePoint(hit){
   if(rt.points.length+1>=ROUTE_MAX){toast(`Up to ${ROUTE_MAX} points`);return}
   const region=detectRegion(hit);if(!region)return;
   const n=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize():new THREE.Vector3(0,0,1);
-  rt.points.push({point:{x:hit.point.x,y:hit.point.y,z:hit.point.z},normal:{x:n.x,y:n.y,z:n.z},anchor:makeAnchor(hit),regionId:region.id,label:region.label});
+  rt.points.push({point:{x:hit.point.x,y:hit.point.y,z:hit.point.z},normal:{x:n.x,y:n.y,z:n.z},anchor:makeAnchor(hit),regionId:region.id,label:region.label,...(rt.kind==='referred'?{also:true}:{})});
   refreshRoute();
 }
 // Saves through the untouched saveEntry(), then attaches (or removes) the route on that entry.
 function saveRouteEntry(){
   if(rt.on&&!rt.points.length){toast('Tap at least one more spot, or turn the switch off');setTracing(true);return}
-  const route=rt.on?{kind:rt.kind,points:rt.points.map(p=>({...p}))}:null;
+  const route=rt.on?{kind:rt.points.some(p=>!p.also)?'travels':'referred',points:rt.points.map(p=>({...p}))}:null;
   const editId=ST.editId,before=new Set(ST.entries.map(e=>e.id));
   saveEntry();
   const e=editId?ST.entries.find(x=>x.id===editId):ST.entries.find(x=>!before.has(x.id));
@@ -3046,7 +3079,8 @@ $r('route-on').addEventListener('change',e=>{
   rt.on=e.target.checked;
   if(rt.on&&!rt.points.length)setTracing(true);else{rt.tracing=false;refreshRoute()}
 });
-$r('route-kind').addEventListener('click',e=>{const b=e.target.closest('.when-chip');if(b){rt.kind=b.dataset.kind;refreshRoute()}});
+// The switch decides what the NEXT taps add; points already placed keep their kind
+['route-kind','trace-kind'].forEach(id=>$r(id).addEventListener('click',e=>{const b=e.target.closest('.when-chip');if(b){rt.kind=b.dataset.kind;refreshRoute()}}));
 $r('route-add').addEventListener('click',()=>setTracing(!rt.tracing));
 $r('route-undo').addEventListener('click',()=>{rt.points.pop();refreshRoute()});
 $r('trace-undo').addEventListener('click',()=>{rt.points.pop();refreshRoute()});
