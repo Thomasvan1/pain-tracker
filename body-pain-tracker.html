@@ -92,6 +92,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .mf-type-list{position:absolute;z-index:6;top:calc(100% + 6px);left:0;display:grid;grid-template-columns:repeat(2,minmax(124px,1fr));gap:2px 14px;max-height:260px;overflow:auto;padding:10px 12px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--neu-soft)}
 .mf-type-list label{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--text);min-height:32px;cursor:pointer}
 .mf-count{font-size:.74rem;color:var(--text-sec)}
+.mf-count.warn{color:var(--amber);font-weight:600}
 .mf-count button{border:none;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:0 0 0 6px;text-decoration:underline}
 .viewer{position:relative;width:100%;aspect-ratio:3/4;min-height:400px;max-height:600px;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--neu-in);cursor:grab;touch-action:none}
 .viewer:active{cursor:grabbing}
@@ -1572,7 +1573,8 @@ function updateMarkerFilterUI(){
   list.querySelectorAll('input').forEach(c=>{c.checked=!MF.hideTypes.has(c.value)});
   document.getElementById('mf-types').classList.toggle('some',MF.hideTypes.size>0);
   const hidden=all.length-all.filter(passesFilter).length,cnt=document.getElementById('mf-count');
-  cnt.textContent=hidden?`${hidden} hidden`:`${all.length} shown`;
+  cnt.textContent=hidden?`${hidden} hidden by the filter`:`${all.length} shown`;
+  cnt.classList.toggle('warn',!!hidden);
   if(hidden){
     const b=document.createElement('button');b.type='button';b.textContent='Show all';
     b.addEventListener('click',()=>{MF.range=0;MF.minSev=1;MF.hideTypes.clear();saveMF();renderMarkers3D()});
