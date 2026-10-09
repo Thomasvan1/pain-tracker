@@ -665,6 +665,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 </div>
 <div class="toast" id="toast"></div>
 
+<script>/* collects page errors for the #debug panel (nothing is sent or saved) */window.__errs=[];addEventListener('error',function(e){window.__errs.push((e.message||'error')+(e.lineno?' @line '+e.lineno:''))});addEventListener('unhandledrejection',function(e){window.__errs.push('promise: '+((e.reason&&e.reason.message)||e.reason))});</script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -3665,4 +3666,38 @@ animate();
 // Ask the sync extension (if installed) to say hello; its content script may attach a moment later.
 window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET);
 setTimeout(()=>{if(!ext.present)window.postMessage({channel:'pts-page',type:'ping'},EXT_TARGET)},1000);
+
+/* --- Diagnostics: add #debug to the end of the address. Shows what the marker code sees and any page errors.
+       Read-only, this page only; nothing is saved or synced. --- */
+(function(){
+  if(!/debug/.test(location.hash))return;
+  const box=document.createElement('pre');
+  box.style.cssText='position:fixed;left:8px;bottom:8px;z-index:200;max-width:min(92vw,540px);max-height:46vh;overflow:auto;margin:0;padding:10px 12px;border-radius:10px;background:rgba(6,16,24,.92);color:#cfe;font:11px/1.45 ui-monospace,Consolas,monospace;white-space:pre-wrap;pointer-events:none';
+  document.body.appendChild(box);
+  let last='(click a marker or a stack)';
+  document.getElementById('viewer').addEventListener('click',()=>setTimeout(()=>{
+    try{const p=pickEntries();last=p.length+' pick(s): '+p.map(x=>x.e.label+' '+x.e.severity+'/10').join(', ')+' | chooser menu '+(document.getElementById('pick-menu').hidden?'closed':'OPEN')+' | form '+(document.getElementById('eform').hidden?'closed':'open')}catch(e){last='error: '+e.message}
+  },80),true);
+  function stacks(){
+    const a=shownEntries().map(e=>({e,p:entryWorld(e).point})),used=new Set();let g=0,biggest=0;
+    a.forEach(x=>{if(used.has(x.e.id))return;const grp=a.filter(y=>!used.has(y.e.id)&&y.p.distanceTo(x.p)<STACK_DIST);if(grp.length<2)return;grp.forEach(y=>used.add(y.e.id));g++;biggest=Math.max(biggest,grp.length)});
+    return{g,biggest};
+  }
+  function draw(){
+    try{
+      const all=activeBodyEntries(),shown=shownEntries(),s=stacks(),r=renderer.domElement.getBoundingClientRect();
+      const badges=bodyGroup?bodyGroup.children.filter(c=>c.isSprite).length:'n/a';
+      box.textContent=['MARKER DIAGNOSTICS (this page only)',
+        'entries on this body: '+all.length+' | shown by the filter: '+shown.length+' | hidden: '+(all.length-shown.length),
+        'filter: '+(MF.range?MF.range+' days':'all time')+', severity '+MF.minSev+'+, hidden types: '+([...MF.hideTypes].join(', ')||'none'),
+        'markers on: '+showMarkers+' | stacks found: '+s.g+' (largest '+s.biggest+') | count badges drawn: '+badges,
+        'text under the model: '+document.getElementById('zhint').textContent,
+        'last click: '+last,
+        '3D view: '+Math.round(r.width)+'x'+Math.round(r.height)+' | window '+innerWidth+'x'+innerHeight+' | pixel ratio '+devicePixelRatio,
+        'browser: '+navigator.userAgent.replace(/^Mozilla\/5\.0 /,'').slice(0,90),
+        'errors: '+((window.__errs||[]).slice(-5).join(' || ')||'none')].join('\n');
+    }catch(e){box.textContent='diagnostics error: '+e.message+'\nerrors: '+((window.__errs||[]).slice(-5).join(' || ')||'none')}
+  }
+  setInterval(draw,600);draw();
+})();
 </script>
