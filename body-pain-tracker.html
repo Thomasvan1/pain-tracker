@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Body Pain Tracker</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
 <style>
 :root {
   --bg:#EFF5F7;--surface:#E6EEF1;--card:#E8F0F3;--text:#163040;--text-sec:#3D6070;--text-muted:#7A9BAA;
@@ -387,6 +387,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
     <button class="neu-pill" id="settings-btn" title="Body model, height, weight and shape">Body settings</button>
     <button class="neu-pill" id="body-toggle" title="Switch body model">Male</button>
     <button class="neu-pill" id="clear-btn">Clear All</button>
+    <button class="neu-pill" id="ll-settings-btn" title="Backup, history, tools and everything else" style="display:none">Settings</button>
   </div>
 </header>
 <div class="sync-nudge" id="sync-nudge" role="status" hidden>
@@ -667,12 +668,24 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 <div class="toast" id="toast"></div>
 
 <script>/* collects page errors for the #debug panel (nothing is sent or saved) */window.__errs=[];addEventListener('error',function(e){window.__errs.push((e.message||'error')+(e.lineno?' @line '+e.lineno:''))});addEventListener('unhandledrejection',function(e){window.__errs.push('promise: '+((e.reason&&e.reason.message)||e.reason))});</script>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<!-- the shared Life Line store; absent when this file is on its own (then it keeps using localStorage) -->
+<script src="../core/ll-core.js"></script>
+<script src="../core/ll-ui.js"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DecalGeometry} from 'three/addons/geometries/DecalGeometry.js';
 window.THREE=THREE;
+/* Storage. Served beside the other Life Line apps, everything goes in their one store (../core/ll-core.js, which
+   moves what was in localStorage across once). On its own (the GitHub Pages copy) it uses localStorage as before.
+   Same keys and shapes either way. */
+const LLS=window.LL||null;
+if(LLS)await LLS.ready;
+const kv={
+  get(k){if(LLS)return LLS.get(k,null);try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set(k,v){if(LLS)LLS.set(k,v);else try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
 /* ═══════════════════════════════════════════
    PARAMS & UTILS
    ═══════════════════════════════════════════ */
@@ -704,7 +717,7 @@ function loadModel(type,cb){
     const msg=document.createElement('div');
     msg.className='viewer-msg';
     msg.textContent=location.protocol==='file:'
-      ?'The 3D body can’t load when this page is opened as a file. Start the local server (see README.txt) and open http://localhost:8765/body-pain-tracker.html'
+      ?'The 3D body can’t load when this page is opened as a file. Open it through the app address (or the local server in README.txt), not by double-clicking the file'
       :'The 3D body model couldn’t be loaded. Check that the models folder is next to this page, then reload.';
     document.getElementById('viewer').appendChild(msg);
   });
@@ -1121,12 +1134,12 @@ function activeBodyEntries(){return bodyEntries().filter(e=>!e.resolved)}
 /* Marker filter: keeps old entries from cluttering the model. Per-device view setting (never synced).
    Entries that don't pass stay on the body as faint rings, so it's clear something is hidden. */
 const MF={range:30,minSev:1,hideTypes:new Set()};
-try{const d=JSON.parse(localStorage.getItem('bpt_mfilter'));if(d){
+try{const d=kv.get('bpt_mfilter');if(d){
   if([0,7,30,90,365].includes(d.range))MF.range=d.range;
   if([1,4,7].includes(d.minSev))MF.minSev=d.minSev;
   if(Array.isArray(d.hideTypes))d.hideTypes.forEach(t=>{if(typeof t==='string')MF.hideTypes.add(t)});
 }}catch{}
-function saveMF(){try{localStorage.setItem('bpt_mfilter',JSON.stringify({range:MF.range,minSev:MF.minSev,hideTypes:[...MF.hideTypes]}))}catch{}}
+function saveMF(){kv.set('bpt_mfilter',{range:MF.range,minSev:MF.minSev,hideTypes:[...MF.hideTypes]})}
 function passesFilter(e){
   if(MF.range){const t=new Date(e.date).getTime();if(!isNaN(t)&&t<Date.now()-MF.range*864e5)return false}
   return e.severity>=MF.minSev&&!MF.hideTypes.has(e.painType);
@@ -2230,8 +2243,8 @@ function tombstone(ids){
   (Array.isArray(ids)?ids:[ids]).forEach(id=>ST.tombstones.push({id,deletedAt:now}));
   saveTombstones();
 }
-function saveTombstones(){try{localStorage.setItem('bpt_tombstones',JSON.stringify(ST.tombstones))}catch{}markDirty()}
-function loadTombstones(){try{const d=localStorage.getItem('bpt_tombstones');if(d)ST.tombstones=JSON.parse(d)}catch{}}
+function saveTombstones(){kv.set('bpt_tombstones',ST.tombstones);markDirty()}
+function loadTombstones(){const d=kv.get('bpt_tombstones');if(d)ST.tombstones=d}
 
 /* ═══════════════════════════════════════════
    DATE/TIME PICKER (ported from Life Line's llp)
@@ -2527,8 +2540,8 @@ function fmtDate(d){
   return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
-function save(){try{localStorage.setItem('bpt_entries',JSON.stringify(ST.entries))}catch{}markDirty()}
-function load(){try{const d=localStorage.getItem('bpt_entries');if(d)ST.entries=JSON.parse(d)}catch{}
+function save(){kv.set('bpt_entries',ST.entries);markDirty()}
+function load(){const d=kv.get('bpt_entries');if(Array.isArray(d))ST.entries=d;
   // Entries from before sync have no edit time. Mark them as oldest-possible so any real edit or
   // deletion from another device wins; stamping "now" would let a stale copy undo a later deletion.
   let changed=false;
@@ -2537,8 +2550,8 @@ function load(){try{const d=localStorage.getItem('bpt_entries');if(d)ST.entries=
 }
 // saveProfile = a user edit (stamps the time sync uses to pick the newest profile); persistProfile = store only.
 function saveProfile(){ST.profileUpdatedAt=Date.now();persistProfile()}
-function persistProfile(){try{localStorage.setItem('bpt_profile',JSON.stringify({htFt:ST.htFt,htIn:ST.htIn,wt:ST.wt,age:ST.age,bodyType:currentBodyType,shape:ST.shape,profileUpdatedAt:ST.profileUpdatedAt}))}catch{}markDirty()}
-function loadProfile(){try{const d=localStorage.getItem('bpt_profile');if(d){const p=JSON.parse(d);ST.htFt=p.htFt||0;ST.htIn=p.htIn||0;ST.wt=p.wt||0;ST.age=p.age||0;ST.profileUpdatedAt=p.profileUpdatedAt||0;if(p.bodyType)currentBodyType=p.bodyType;if(p.shape&&typeof p.shape==='object')SHAPE_PARTS.forEach(sp=>{const v=+p.shape[sp.id];if(v)ST.shape[sp.id]=clamp(v,-1,1)});document.getElementById('ht-ft').value=ST.htFt||'';document.getElementById('ht-in').value=ST.htIn||'';document.getElementById('wt').value=ST.wt||'';document.getElementById('age').value=ST.age||'';document.getElementById('body-toggle').textContent=currentBodyType==='male'?'Male':'Female'}}catch{}}
+function persistProfile(){kv.set('bpt_profile',{htFt:ST.htFt,htIn:ST.htIn,wt:ST.wt,age:ST.age,bodyType:currentBodyType,shape:ST.shape,profileUpdatedAt:ST.profileUpdatedAt});markDirty()}
+function loadProfile(){try{const p=kv.get('bpt_profile');if(p){ST.htFt=p.htFt||0;ST.htIn=p.htIn||0;ST.wt=p.wt||0;ST.age=p.age||0;ST.profileUpdatedAt=p.profileUpdatedAt||0;if(p.bodyType)currentBodyType=p.bodyType;if(p.shape&&typeof p.shape==='object')SHAPE_PARTS.forEach(sp=>{const v=+p.shape[sp.id];if(v)ST.shape[sp.id]=clamp(v,-1,1)});document.getElementById('ht-ft').value=ST.htFt||'';document.getElementById('ht-in').value=ST.htIn||'';document.getElementById('wt').value=ST.wt||'';document.getElementById('age').value=ST.age||'';document.getElementById('body-toggle').textContent=currentBodyType==='male'?'Male':'Female'}}catch{}}
 
 function renderLog(){
   const list=document.getElementById('llist');
@@ -3218,8 +3231,8 @@ const SYNC_FILE='pain-tracker-sync.txt';
 const $s=id=>document.getElementById(id);
 let pendingShareFile=null,passResolve=null,passValidate=null;
 
-function syncMeta(){try{return JSON.parse(localStorage.getItem('bpt_sync_meta'))||{}}catch{return{}}}
-function setSyncMeta(patch){try{localStorage.setItem('bpt_sync_meta',JSON.stringify({...syncMeta(),...patch}))}catch{}refreshSyncUI()}
+function syncMeta(){return kv.get('bpt_sync_meta')||{}}
+function setSyncMeta(patch){kv.set('bpt_sync_meta',{...syncMeta(),...patch});refreshSyncUI()}
 function fmtShort(t){return t?new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'never'}
 function syncMsg(text,kind){const el=$s('sync-msg');el.textContent=text||'';el.className='sync-msg'+(kind?' '+kind:'')}
 // Short fingerprint of everything a sync file would hold, to tell "this device has changes the file doesn't".
@@ -3249,7 +3262,7 @@ function refreshSyncNudge(){
     $s('sync-card').scrollIntoView({behavior:'smooth',block:'center'});
     if(st.kind==='unsent')doExport();else el.hidden=true;
   };
-  $s('sync-nudge-x').onclick=()=>{try{localStorage.setItem('bpt_sync_meta',JSON.stringify({...syncMeta(),nudgeOff:st.key}))}catch{}el.hidden=true};
+  $s('sync-nudge-x').onclick=()=>{kv.set('bpt_sync_meta',{...syncMeta(),nudgeOff:st.key});el.hidden=true};
   el.hidden=false;
   return st;
 }
@@ -3588,6 +3601,35 @@ document.addEventListener('visibilitychange',()=>{
 });
 // INIT
 loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();when.init();refreshSyncUI();
+// A Life Line backup restored on this device leaves the Body Tracker's part here; it goes through the same checks and
+// merge as a sync file. 'replace' = the backup's entries stand in for this device's.
+// The shared settings screen (only when served beside the other Life Line apps)
+if(LLS&&LLS.ui){
+  const sb=document.getElementById('ll-settings-btn');
+  sb.style.display='';
+  sb.addEventListener('click',()=>LLS.ui.settings());
+  LLS.ui.settings.page('Body Tracker');
+  LLS.ui.settings.add('app',()=>[
+    {title:'Body settings',desc:'Body model, height, weight, age and shape.',type:'button',label:'Open',closes:true,on:()=>document.getElementById('settings-btn').click()}
+  ]);
+  LLS.ui.settings.add('danger',()=>[
+    {title:'Clear all pain entries',desc:'Delete every entry on this body ('+ST.entries.length+' now). The Body Tracker keeps no Recently Deleted.',type:'button',label:'Clear all',warn:true,closes:true,on:()=>document.getElementById('clear-btn').click()}
+  ]);
+}
+(function takeIncoming(){
+  if(!LLS)return;
+  const inc=LLS.get('bpt_incoming',null);
+  if(inc&&inc.payload){
+    LLS.remove('bpt_incoming');
+    try{
+      if(inc.mode==='replace'){ST.entries=[];ST.tombstones=[];ST.profileUpdatedAt=0}
+      const st=mergeSyncPayload(inc.payload),n=st.added+st.updated+st.removed;
+      setTimeout(()=>toast(inc.mode==='replace'?'Entries loaded from your Life Line backup':n?`From your Life Line backup: ${st.added} new, ${st.updated} updated, ${st.removed} removed`:'Life Line backup: already up to date'),1200);
+    }catch(e){setTimeout(()=>toast(e.message),1200)}
+  }
+  // Entries changed outside this page (another tab, a backup being restored): start again from what is stored
+  LLS.onChange(k=>{if(k==='bpt_incoming'?!!LLS.get('bpt_incoming',null):/^bpt_(entries|tombstones|profile)$/.test(k))location.reload()});
+})();
 if(ST.entries.some(e=>!e.bodyType)){ST.entries.forEach(e=>{if(!e.bodyType)e.bodyType=currentBodyType});save()}
 initScene();
 buildBody();
@@ -3639,7 +3681,7 @@ animate();
     if(home)home.parent.insertBefore(viewer,home.next);
     resetZoom();
     holder.appendChild(prof);
-    try{localStorage.setItem(KEY,'1')}catch{}
+    kv.set(KEY,true);
     closePickMenu();
     g('settings-btn').focus();
   }
@@ -3661,7 +3703,7 @@ animate();
   g('settings-btn').addEventListener('click',()=>open('settings'));
 
   let seen=false,hasProfile=false;
-  try{seen=!!localStorage.getItem(KEY);hasProfile=!!localStorage.getItem('bpt_profile')}catch{seen=true}
+  try{seen=!!kv.get(KEY);hasProfile=!!kv.get('bpt_profile')}catch{seen=true}
   if(!seen&&!hasProfile&&!ST.entries.length)open('welcome');
 })();
 
