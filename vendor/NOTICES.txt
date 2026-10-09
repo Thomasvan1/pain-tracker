@@ -1,0 +1,15 @@
+Third-party software and artwork used by the Body Tracker. Each keeps its own licence.
+
+three.js 0.160.0 (three/build, three/examples/jsm: GLTFLoader, DecalGeometry, BufferGeometryUtils)
+  Copyright three.js authors. MIT licence, see three/LICENSE. https://threejs.org
+
+Figtree (fonts/figtree-*.woff2)
+  Copyright 2022 The Figtree Project Authors. SIL Open Font License 1.1, see fonts/OFL-Figtree.txt.
+
+Noto Sans (fonts/noto-sans-*.woff2)
+  Copyright 2022 The Noto Project Authors. SIL Open Font License 1.1, see fonts/OFL-NotoSans.txt.
+
+3D body models (../models)
+  "Human Body Base Mesh" (male) and "Free Human Body Base Mesh" (female) by ferrumiron6 on Sketchfab,
+  Creative Commons Attribution 4.0 (CC BY 4.0). The body shape is modified in this app.
+  https://sketchfab.com/ferrumiron6   https://creativecommons.org/licenses/by/4.0/
