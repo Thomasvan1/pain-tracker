@@ -111,7 +111,17 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .fg textarea{resize:vertical;min-height:64px}
 .fg input[readonly]{opacity:.7;cursor:default}
 .ftype-def{font-size:.78rem;line-height:1.5;color:var(--text-sec);margin-top:7px;max-width:62ch}
-.fg input.ftype-other{margin-top:8px}
+.ftype-combo{position:relative}
+.ftype-combo input{padding-right:48px}
+.ftype-drop{position:absolute;top:0;right:0;width:46px;height:44px;border:none;background:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:0 var(--radius) var(--radius) 0;touch-action:manipulation}
+.ftype-drop:hover,.ftype-drop[aria-expanded="true"]{color:var(--accent)}
+.ftype-drop:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.ftype-drop svg{transition:transform .25s var(--ease)}
+.ftype-drop[aria-expanded="true"] svg{transform:rotate(180deg)}
+.ftype-list:not([hidden]){position:absolute;z-index:8;left:0;right:0;top:calc(100% + 6px);max-height:260px;overflow-y:auto;padding:6px;border-radius:var(--radius);background:var(--surface);box-shadow:var(--neu-soft);display:flex;flex-direction:column;gap:2px}
+.ftype-list button{border:none;background:none;color:var(--text);font:inherit;font-size:.85rem;text-align:left;padding:9px 12px;min-height:40px;border-radius:calc(var(--radius) - 2px);cursor:pointer}
+.ftype-list button:hover,.ftype-list button:focus-visible{background:var(--card);outline:none}
+.ftype-list button[aria-selected="true"]{background:var(--accent-lt);color:var(--accent);font-weight:600}
 .ftype-more{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:2px}
 .ftype-more[aria-expanded="true"] .summ-chev{transform:rotate(90deg);color:var(--accent)}
 .ftype-guide:not([hidden]){display:flex;flex-direction:column;gap:4px;margin-top:6px;max-height:320px;overflow-y:auto;padding:4px;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in)}
@@ -284,7 +294,7 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .welcome-sub{font-size:.86rem;color:var(--text-sec);line-height:1.6;margin-bottom:16px;max-width:70ch}
 .welcome-lbl{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
 .welcome-note{font-size:.74rem;color:var(--text-muted);line-height:1.5;margin:4px 0 12px}
-.setup{position:relative;max-width:960px}
+.hist-panel.setup{position:relative;max-width:960px}   /* .hist-panel (defined later) caps panels at 560px; the welcome / body settings card needs the room */
 .setup h2{font-size:1.2rem;font-weight:700;margin-bottom:8px;padding-right:36px}
 .setup-x{position:absolute;top:16px;right:16px}
 .setup-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
@@ -458,7 +468,9 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
           <span class="sev-badge" id="sbadge" style="background:var(--amber)">5</span>
         </div>
       </div>
-      <div class="fg"><label for="ftype">Pain Type</label><select id="ftype">
+      <div class="fg"><label for="ftype-text">Pain Type</label>
+        <!-- The select stays as the source of truth for the listed types (hidden); the visible field is one text box with a list on the right -->
+        <select id="ftype" hidden tabindex="-1" aria-hidden="true">
         <option value="aching">Aching</option><option value="burning">Burning</option><option value="cramping">Cramping</option>
         <option value="dull">Dull</option><option value="numbness">Numbness</option><option value="pressure">Pressure</option>
         <option value="sharp" selected>Sharp</option><option value="shooting">Shooting</option><option value="stabbing">Stabbing</option>
@@ -466,7 +478,14 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
         <option value="tightness">Tightness</option><option value="weakness">Weakness</option><option value="swelling">Swelling</option>
         <option value="other">Other (use my own words)</option>
       </select>
-        <input type="text" id="ftype-other" class="ftype-other" maxlength="40" placeholder="Describe it in a word or two, e.g. grinding" aria-label="Your own word for this pain" hidden>
+        <div class="ftype-combo">
+          <input type="text" id="ftype-text" maxlength="40" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="ftype-list" aria-autocomplete="none" placeholder="Pick one, or type your own word">
+          <button type="button" class="ftype-drop" id="ftype-drop" aria-label="Show the listed pain types" aria-expanded="false" aria-controls="ftype-list">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+          </button>
+          <div class="ftype-list" id="ftype-list" role="listbox" aria-label="Listed pain types" hidden></div>
+        </div>
+        <input type="hidden" id="ftype-other" value="">
         <p class="ftype-def" id="ftype-def" aria-live="polite"></p>
         <button type="button" class="params-toggle ftype-more" id="ftype-more" aria-expanded="false" aria-controls="ftype-guide">
           <svg class="summ-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
@@ -1428,8 +1447,8 @@ function routeTube(pts,radius,color,alphaAt,order,from,total){
 // Draws a route into group g. spots[0] is the starting spot (its marker is drawn elsewhere).
 // travels:  one solid line through the spots in order, with arrowheads along it and at every stop, so the
 //           direction the pain moves is obvious.
-// referred: ("also felt at") each other spot is its own dashed-ring node, tied back to the main spot by a thin
-//           dashed link with no arrows: connected, but clearly not pain that travelled there.
+// referred: ("also felt at") each other spot is its own dashed-ring node. No line to the main spot (a line would
+//           read as pain that travelled there); hovering or clicking a ring names it and opens the entry.
 // entryId set = saved entry (clickable); unset = the draft being traced.
 const ARROW_GAP=5.5;
 function drawRoute(g,spots,kind,hex,entryId){
@@ -1473,12 +1492,8 @@ function drawRoute(g,spots,kind,hex,entryId){
   };
 
   if(kind==='referred'){
-    const dash=d=>(d%2.4)<1.2;
+    // Ring only, no line back to the main spot: a line reads as "the pain shot there", and lines are for "travels to".
     spots.slice(1).forEach(p=>{
-      const l=surfaceLine(spots[0],p);
-      g.add(routeTube(l,ROUTE_R*1.5,dark,d=>dash(d)?0.45:0,1,0,1));
-      const link=routeTube(l,ROUTE_R*0.75,color,d=>dash(d)?0.9:0,2,0,1);
-      g.add(link);pickable(link,'line');
       const w=entryWorld(p),n=w.normal.clone().normalize();
       g.add(makeDecal(w.mesh||allMeshes[0],w.point,n,5.5,markerTex(hex,{dash:true})));
       stud(w.point,n,0.8);
@@ -2984,13 +2999,38 @@ const PAIN_DICT={
   swelling:{def:'Puffiness or a full, stretched feeling, sometimes visibly larger.',also:'puffy, swollen, tight skin'}
 };
 const painGuide=document.getElementById('ftype-guide'),painMore=document.getElementById('ftype-more');
-function updatePainDef(){
-  const v=document.getElementById('ftype').value,d=PAIN_DICT[v];
-  document.getElementById('ftype-other').hidden=v!=='other';
-  document.getElementById('ftype-def').textContent=d?d.def:v==='other'?'None of the listed types fit. Say what it feels like in your own words; it is saved exactly as you type it.':'';
+// Pain type is one text box. Type your own word, or open the list at its right to go back to a listed type.
+// #ftype (hidden select) holds the listed type, or 'other' with the typed word in #ftype-other; entries are
+// saved from those two, so nothing downstream changes.
+const ptSel=document.getElementById('ftype'),ptOther=document.getElementById('ftype-other');
+const ptText=document.getElementById('ftype-text'),ptList=document.getElementById('ftype-list'),ptDrop=document.getElementById('ftype-drop');
+const ptLabel=v=>{const o=[...ptSel.options].find(x=>x.value===v);return o?o.textContent:''};
+function updatePainDef(syncText=true){
+  const v=ptSel.value,d=PAIN_DICT[v];
+  if(syncText)ptText.value=v==='other'?ptOther.value:ptLabel(v);
+  document.getElementById('ftype-def').textContent=d?d.def:v==='other'&&ptOther.value?'Your own word, saved exactly as you type it. Use the arrow on the right to go back to the listed types.':'';
   document.getElementById('route-nudge').hidden=!(v==='shooting'&&!rt.on);
   painGuide.querySelectorAll('.ftype-opt').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
+  ptList.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.v===v)));
 }
+function setPainList(open){ptList.hidden=!open;ptDrop.setAttribute('aria-expanded',String(open));ptText.setAttribute('aria-expanded',String(open))}
+function pickPainType(v){ptSel.value=v;ptOther.value='';updatePainDef();setPainList(false);setPainGuide(false)}
+[...ptSel.options].filter(o=>o.value!=='other').forEach(o=>{
+  const b=document.createElement('button');
+  b.type='button';b.setAttribute('role','option');b.dataset.v=o.value;b.textContent=o.textContent;
+  b.addEventListener('click',()=>{pickPainType(o.value);ptText.focus()});
+  ptList.appendChild(b);
+});
+ptText.addEventListener('input',()=>{
+  const t=ptText.value.trim().slice(0,40),m=[...ptSel.options].find(o=>o.value!=='other'&&o.textContent.toLowerCase()===t.toLowerCase());
+  if(m){ptSel.value=m.value;ptOther.value=''}else{ptSel.value='other';ptOther.value=t}
+  updatePainDef(false);
+});
+// leaving the box empty puts the last listed type back rather than saving a blank
+ptText.addEventListener('blur',()=>{if(!ptText.value.trim()){if(ptSel.value==='other')ptSel.value='sharp';ptOther.value='';updatePainDef()}});
+ptText.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){setPainList(true);e.preventDefault()}else if(e.key==='Escape'&&!ptList.hidden){setPainList(false);e.stopPropagation()}});
+ptDrop.addEventListener('click',()=>{const o=ptList.hidden;setPainList(o);if(o){const cur=ptList.querySelector('[aria-selected="true"]');if(cur)cur.scrollIntoView({block:'nearest'})}});
+document.addEventListener('click',e=>{if(!ptList.hidden&&!e.target.closest('.ftype-combo'))setPainList(false)});
 function setPainGuide(open){painGuide.hidden=!open;painMore.setAttribute('aria-expanded',String(open))}
 [...document.querySelectorAll('#ftype option')].forEach(o=>{
   const d=PAIN_DICT[o.value];if(!d)return;
@@ -3000,10 +3040,9 @@ function setPainGuide(open){painGuide.hidden=!open;painMore.setAttribute('aria-e
   const s=document.createElement('span');s.textContent=d.def;
   const i=document.createElement('i');i.textContent='Also described as: '+d.also;
   b.append(t,s,i);
-  b.addEventListener('click',()=>{const sel=document.getElementById('ftype');sel.value=o.value;updatePainDef();setPainGuide(false);sel.focus()});
+  b.addEventListener('click',()=>{pickPainType(o.value);ptText.focus()});
   painGuide.appendChild(b);
 });
-document.getElementById('ftype').addEventListener('change',e=>{updatePainDef();if(e.target.value==='other')document.getElementById('ftype-other').focus()});
 painMore.addEventListener('click',()=>{
   setPainGuide(painGuide.hidden);
   if(!painGuide.hidden){const cur=painGuide.querySelector('[aria-pressed="true"]');if(cur)cur.scrollIntoView({block:'nearest'})}
