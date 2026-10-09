@@ -1189,7 +1189,7 @@ function makeDecal(mesh,point,normal,size,tex){
 // What a tap/hover in Markers mode lands on, best first. A single marker always beats a route line or a
 // route's in-between point sitting under it, and when several markers share the spot they're all returned
 // (the caller shows a chooser) so no entry can hide under another.
-const PICK_RANK={marker:0,point:1,line:2},STACK_DIST=4;
+const PICK_RANK={marker:0,point:1,line:2},STACK_DIST=MARKER_SIZE;   // markers closer than one marker width overlap on screen, so they count as a stack
 function pickEntries(){
   const ray=raycaster.ray,body=raycaster.intersectObjects(allMeshes,false)[0];
   const limit=body?body.distance+2:Infinity;   // ignore markers on the far side of the body
@@ -1701,7 +1701,7 @@ function classifyRegion(xs,r,z,nx,ny,nz,L){
     return['Side of Neck',1];
   }
   if(r>L.crown||ny>.75)return['Top of Head',0];
-  if(nz<-.35)return['Back of Head',0];
+  if(nz<-.35&&z<0.02)return['Back of Head',0];   // z: only the rear half of the skull; backward-facing vertices inside the nose / eye / mouth are not the back of the head
   if(Math.abs(nx)>.6&&nz<.45)return['Side of Head',1];
   if(r<L.mouth)return['Jaw',0];
   if(r>L.brow)return['Forehead',0];
