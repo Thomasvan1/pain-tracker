@@ -64,6 +64,8 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 .param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:var(--neu-soft);cursor:pointer;border:2px solid var(--surface)}
 .param-row{display:flex;gap:10px}
 .pf{flex:1;min-width:0}
+.pf[hidden]{display:none}
+.pf select{width:100%;padding:8px 10px;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;min-height:38px}
 .pf label{display:block;font-size:.68rem;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .pf input{width:100%;padding:8px 10px;border:none;border-radius:var(--radius);background:var(--card);box-shadow:var(--neu-in);color:var(--text);font-family:inherit;font-size:.82rem;font-weight:500;min-height:38px;transition:box-shadow .3s var(--ease)}
 .pf input:focus{outline:none;box-shadow:var(--neu-in),0 0 0 2px var(--accent-glow)}
@@ -399,9 +401,12 @@ body{font-family:'Figtree','Noto Sans',system-ui,sans-serif;background:var(--bg)
 <section class="profile neu">
   <h3>Body Parameters</h3>
   <div class="param-row">
-    <div class="pf"><label for="ht-ft">Height (ft)</label><input type="number" inputmode="numeric" id="ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
-    <div class="pf"><label for="ht-in">Height (in)</label><input type="number" inputmode="numeric" id="ht-in" placeholder="e.g. 10" min="0" max="11"></div>
-    <div class="pf"><label for="wt">Weight (lbs)</label><input type="number" inputmode="numeric" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
+    <div class="pf"><label for="units">Units</label><select id="units"><option value="imperial">ft, in, lb</option><option value="metric">cm, kg</option></select></div>
+    <div class="pf" id="pf-ft"><label for="ht-ft">Height (ft)</label><input type="number" inputmode="numeric" id="ht-ft" placeholder="e.g. 5" min="3" max="8"></div>
+    <div class="pf" id="pf-in"><label for="ht-in">Height (in)</label><input type="number" inputmode="numeric" id="ht-in" placeholder="e.g. 10" min="0" max="11"></div>
+    <div class="pf" id="pf-lb"><label for="wt">Weight (lbs)</label><input type="number" inputmode="numeric" id="wt" placeholder="e.g. 170" min="60" max="1000"></div>
+    <div class="pf" id="pf-cm" hidden><label for="ht-cm">Height (cm)</label><input type="number" inputmode="numeric" id="ht-cm" placeholder="e.g. 178" min="92" max="271"></div>
+    <div class="pf" id="pf-kg" hidden><label for="wt-kg">Weight (kg)</label><input type="number" inputmode="numeric" id="wt-kg" placeholder="e.g. 77" min="28" max="453"></div>
     <div class="pf"><label for="age">Age</label><input type="number" inputmode="numeric" id="age" placeholder="e.g. 30" min="1" max="120"></div>
   </div>
   <div class="prof-hint" id="bmi-hint">Used to size the model and for your doctor summary.</div>
@@ -2602,7 +2607,7 @@ function renderSummary(){
   const resolved=ST.entries.filter(e=>e.resolved);
   if(!ST.entries.length){body.textContent='No pain entries recorded yet. Click anywhere on the 3D body above to log pain points for your next appointment.';return}
   let t=`PAIN SUMMARY REPORT\nGenerated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n`;
-  if(ST.htFt)t+=`Patient: ${ST.htFt}'${ST.htIn||0}" / ${ST.wt||'—'} lbs${ST.age?' / Age '+ST.age:''}\n`;
+  if(ST.htFt)t+=`Patient: ${patientMeasure()}${ST.age?' / Age '+ST.age:''}\n`;
   t+='─'.repeat(44)+'\n\n';
   if(active.length){
     t+=`ACTIVE PAIN POINTS (${active.length})\n\n`;
@@ -2788,7 +2793,7 @@ function mergeSyncPayload(incoming){
     if(p.shape&&typeof p.shape==='object')SHAPE_PARTS.forEach(sp=>{const v=+p.shape[sp.id];if(v)ST.shape[sp.id]=clamp(v,-1,1)});
   }
   ['ht-ft','ht-in','wt','age'].forEach((id,i)=>{document.getElementById(id).value=[ST.htFt,ST.htIn,ST.wt,ST.age][i]||''});
-  syncShapeUI();refreshBmiHint();
+  syncShapeUI();refreshBmiHint();fillMetric();
   save();saveTombstones();persistProfile();
   return stats;
 }
@@ -2851,6 +2856,36 @@ async function forgetPassphrase(){await idbDel('wrapKey');await idbDel('wrapped'
    PARAM UI & MEASUREMENTS
    ═══════════════════════════════════════════ */
 let measureDebounce=null;
+// Units are a display choice for this device. Everything stored and synced stays feet / inches / pounds, and the
+// metric boxes convert to and from those, so a phone on cm / kg and a computer on ft / lb still agree.
+const $u=id=>document.getElementById(id);   // ($s is declared further down the file)
+let UNITS=kv.get('bpt_units')==='metric'?'metric':'imperial';
+const LB_PER_KG=2.20462,CM_PER_IN=2.54;
+function fillMetric(){
+  const inch=(ST.htFt||0)*12+(ST.htIn||0);
+  $u('ht-cm').value=inch?Math.round(inch*CM_PER_IN):'';
+  $u('wt-kg').value=ST.wt?Math.round(ST.wt/LB_PER_KG):'';
+}
+function applyUnits(){
+  const m=UNITS==='metric';
+  ['pf-ft','pf-in','pf-lb'].forEach(id=>{$u(id).hidden=m});
+  ['pf-cm','pf-kg'].forEach(id=>{$u(id).hidden=!m});
+  $u('units').value=UNITS;
+  fillMetric();
+}
+function metricInput(){
+  const cm=+$u('ht-cm').value,kg=+$u('wt-kg').value;
+  if(cm>0){const inch=Math.round(cm/CM_PER_IN);$u('ht-ft').value=Math.floor(inch/12);$u('ht-in').value=inch%12}
+  else{$u('ht-ft').value='';$u('ht-in').value=''}
+  $u('wt').value=kg>0?Math.round(kg*LB_PER_KG):'';
+  applyMeasurements();
+}
+// "Patient" line of the doctor summary, in the unit this device uses
+function patientMeasure(){
+  const inch=(ST.htFt||0)*12+(ST.htIn||0);
+  if(UNITS==='metric')return `${Math.round(inch*CM_PER_IN)} cm / ${ST.wt?Math.round(ST.wt/LB_PER_KG)+' kg':'—'}`;
+  return `${ST.htFt}'${ST.htIn||0}" / ${ST.wt||'—'} lbs`;
+}
 function refreshBmiHint(){
   const hint=document.getElementById('bmi-hint');
   const inches=ST.htFt*12+(ST.htIn||0);
@@ -2889,6 +2924,8 @@ document.getElementById('vtabs').addEventListener('click',e=>{
   animToView(b.dataset.v);
 });
 ['ht-ft','ht-in','wt','age'].forEach(id=>document.getElementById(id).addEventListener('input',applyMeasurements));
+['ht-cm','wt-kg'].forEach(id=>$u(id).addEventListener('input',metricInput));
+$u('units').addEventListener('change',()=>{UNITS=$u('units').value==='metric'?'metric':'imperial';kv.set('bpt_units',UNITS);applyUnits();renderSummary()});
 document.getElementById('fsev').addEventListener('input',e=>updateSev(e.target.value));
 [['sev-dn',-1],['sev-up',1]].forEach(([id,d])=>document.getElementById(id).addEventListener('click',()=>{
   const el=document.getElementById('fsev');el.value=clamp(+el.value+d,1,10);updateSev(el.value);
@@ -3600,7 +3637,7 @@ document.addEventListener('visibilitychange',()=>{
   if(auto.enabled)scheduleAutoSync(500);else refreshSyncUI();
 });
 // INIT
-loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();dtp.init();when.init();refreshSyncUI();
+loadProfile();load();loadTombstones();syncShapeUI();refreshBmiHint();applyUnits();dtp.init();when.init();refreshSyncUI();
 // A Life Line backup restored on this device leaves the Body Tracker's part here; it goes through the same checks and
 // merge as a sync file. 'replace' = the backup's entries stand in for this device's.
 // The shared settings screen (only when served beside the other Life Line apps)
@@ -3655,10 +3692,18 @@ animate();
     if(!(Number.isInteger(inch)&&inch>=0&&inch<=11))bad.push(['ht-in','height (inches, 0–11)']);
     if(!(wt>=60&&wt<=1000))bad.push(['wt','weight (60–1000 lbs)']);
     if(!(Number.isInteger(age)&&age>=1&&age<=120))bad.push(['age','age (1–120)']);
+    if(UNITS==='metric'){
+      const out=[];
+      bad.forEach(b=>{
+        const m=b[0]==='ht-ft'||b[0]==='ht-in'?['ht-cm','height (92–271 cm)']:b[0]==='wt'?['wt-kg','weight (28–453 kg)']:b;
+        if(!out.some(o=>o[0]===m[0]))out.push(m);
+      });
+      return out;
+    }
     return bad;
   }
   function showProblems(bad){
-    FIELDS.forEach(id=>g(id).classList.toggle('invalid',bad.some(b=>b[0]===id)));
+    FIELDS.concat(['ht-cm','wt-kg']).forEach(id=>g(id).classList.toggle('invalid',bad.some(b=>b[0]===id)));
     g('setup-err').textContent=bad.length?'Please fill in or fix: '+bad.map(b=>b[1]).join(', ')+'.':'';
   }
   function open(m){
@@ -3674,7 +3719,7 @@ animate();
     g('setup-params').appendChild(prof);
     showProblems([]);updateBodyToggle();
     ov.hidden=false;
-    (m==='welcome'?g('ht-ft'):g('setup-done')).focus();
+    (m==='welcome'?g(UNITS==='metric'?'ht-cm':'ht-ft'):g('setup-done')).focus();
   }
   function close(){
     ov.hidden=true;setupOpen=false;mode=null;setShapePanel(false);
@@ -3695,7 +3740,7 @@ animate();
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&mode==='settings'&&!ov.hidden&&g('confirm-overlay').hidden)close();
   });
-  FIELDS.forEach(id=>g(id).addEventListener('input',()=>{g(id).classList.remove('invalid');g('setup-err').textContent=''}));
+  FIELDS.concat(['ht-cm','wt-kg']).forEach(id=>g(id).addEventListener('input',()=>{g(id).classList.remove('invalid');g('setup-err').textContent=''}));
   g('setup-body').addEventListener('click',e=>{
     const b=e.target.closest('[data-b]');
     if(b&&b.dataset.b!==currentBodyType)g('body-toggle').click();   // same path as the header toggle, incl. the clear-entries confirm
